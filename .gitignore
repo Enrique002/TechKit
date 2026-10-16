@@ -1,0 +1,6 @@
+node_modules
+dist
+dist-isolation
+src-tauri/target
+.DS_Store
+*.log
