@@ -107,15 +107,15 @@ const MOCK_DISKS: DiskVolume[] = [
 ];
 
 const MOCK_GPU: GpuInfo = {
-  model: 'NVIDIA GeForce RTX 5080',
-  vendor: 'NVIDIA Corporation',
-  dedicatedMemoryBytes: 17179869184, // 16 GB
-  sharedMemoryBytes: 34359738368,   // 32 GB
-  usagePercentage: 18.0,
-  temperatureC: 39,
-  powerDrawWatts: 110,
-  driverVersion: '555.99 (WHQL)',
-  displaysConnected: ['DisplayPort 1: 3840x2160 @ 144Hz (NVIDIA G-SYNC)'],
+  model: 'Adaptador gráfico del sistema',
+  vendor: 'No disponible',
+  dedicatedMemoryBytes: 0,
+  sharedMemoryBytes: 0,
+  usagePercentage: 0,
+  temperatureC: undefined,
+  powerDrawWatts: undefined,
+  driverVersion: 'No disponible',
+  displaysConnected: ['Pantalla principal'],
 };
 
 const MOCK_MOTHERBOARD: MotherboardBiosInfo = {

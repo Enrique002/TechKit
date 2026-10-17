@@ -6,6 +6,7 @@ pub use commands::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             get_system_summary,
             get_cpu_info,

@@ -2,6 +2,12 @@ use serde::Serialize;
 use sysinfo::{CpuRefreshKind, Disks, MemoryRefreshKind, ProcessRefreshKind, RefreshKind, System};
 use std::process::Command;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Serialize)]
 pub struct SystemSummaryResponse {
     pub hostname: String,
@@ -306,9 +312,10 @@ pub fn open_external_url(url: String) -> UrlOpenResponse {
 
     #[cfg(target_os = "windows")]
     {
-        let status = Command::new("powershell")
-            .args(&["-NoProfile", "-NonInteractive", "-Command", "Start-Process", clean])
-            .status();
+        let mut cmd = Command::new("powershell");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.args(&["-NoProfile", "-NonInteractive", "-Command", "Start-Process", clean]);
+        let status = cmd.status();
 
         return match status {
             Ok(s) if s.success() => UrlOpenResponse {
@@ -394,9 +401,9 @@ pub fn get_cpu_info() -> CpuInfoResponse {
         physical_cores,
         logical_cores,
         base_frequency_ghz,
-        current_frequency_ghz: base_frequency_ghz * 1.1,
+        current_frequency_ghz: base_frequency_ghz,
         architecture,
-        instructions_supported: vec!["MMX".to_string(), "SSE".to_string(), "SSE2".to_string(), "AVX".to_string(), "AVX2".to_string()],
+        instructions_supported: if base_frequency_ghz > 0.0 { vec!["x86_64".to_string()] } else { vec![] },
         global_usage_percentage,
     }
 }
@@ -424,14 +431,11 @@ pub fn get_memory_info() -> MemoryInfoResponse {
         used_bytes,
         free_bytes,
         available_bytes,
-        committed_bytes: (total_bytes as f64 * 0.55) as u64,
-        paged_bytes: 2147483648,
-        cached_bytes: 4294967296,
+        committed_bytes: used_bytes,
+        paged_bytes: 0,
+        cached_bytes: 0,
         usage_percentage,
-        modules: vec![
-            MemoryModuleResponse { slot: "DIMM 1".to_string(), capacity_bytes: total_bytes / 2, speed_mhz: 3200, r#type: "DDR4".to_string() },
-            MemoryModuleResponse { slot: "DIMM 3".to_string(), capacity_bytes: total_bytes / 2, speed_mhz: 3200, r#type: "DDR4".to_string() },
-        ],
+        modules: vec![],
     }
 }
 
@@ -463,12 +467,12 @@ pub fn get_disk_info() -> Vec<DiskVolume> {
             used_bytes,
             usage_percentage,
             is_removable: disk.is_removable(),
-            disk_type: if disk.is_removable() { "USB / Extraíble".to_string() } else { "SSD / NVMe".to_string() },
-            read_speed_mbps: 185.0,
-            write_speed_mbps: 62.0,
-            smart_health: "Bueno (100%)".to_string(),
-            temperature_c: Some(36),
-            power_on_hours: Some(2100),
+            disk_type: if disk.is_removable() { "Extraíble".to_string() } else { "Fijo".to_string() },
+            read_speed_mbps: 0.0,
+            write_speed_mbps: 0.0,
+            smart_health: "No disponible".to_string(),
+            temperature_c: None,
+            power_on_hours: None,
         });
     }
 
@@ -477,45 +481,60 @@ pub fn get_disk_info() -> Vec<DiskVolume> {
 
 #[tauri::command]
 pub fn get_gpu_info() -> GpuInfoResponse {
-    // Attempt WMI query via PowerShell on Windows if available
+    // Attempt WMI query via PowerShell on Windows silently without console window
     #[cfg(target_os = "windows")]
     {
-        let output = Command::new("powershell")
-            .args(&["-NoProfile", "-Command", "Get-CimInstance Win32_VideoController | Select-Name, AdapterRAM, DriverVersion | ConvertTo-Json"])
-            .output();
+        let mut cmd = Command::new("powershell");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.args(&[
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM, DriverVersion, VideoProcessor, Status | ConvertTo-Json"
+        ]);
 
-        if let Ok(out) = output {
+        if let Ok(out) = cmd.output() {
             if out.status.success() {
                 let stdout = String::from_utf8_lossy(&out.stdout);
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(&stdout) {
-                    let first = if val.is_array() { val.get(0) } else { Some(&val) };
-                    if let Some(gpu_obj) = first {
-                        let name = gpu_obj.get("Name").and_then(|v| v.as_str()).unwrap_or("Adaptador gráfico").to_string();
-                        let vram = gpu_obj.get("AdapterRAM").and_then(|v| v.as_u64()).unwrap_or(8589934592);
-                        let driver = gpu_obj.get("DriverVersion").and_then(|v| v.as_str()).unwrap_or("WHQL").to_string();
-                        let vendor = if name.to_lowercase().contains("nvidia") {
-                            "NVIDIA Corporation".to_string()
-                        } else if name.to_lowercase().contains("amd") || name.to_lowercase().contains("radeon") {
-                            "Advanced Micro Devices, Inc.".to_string()
-                        } else if name.to_lowercase().contains("intel") {
-                            "Intel Corporation".to_string()
-                        } else {
-                            "Fabricante de pantalla".to_string()
-                        };
+                    // WMI may return an array if multiple GPUs exist (e.g., dedicated RTX 5080 + iGPU) or a single object.
+                    // Prefer dedicated GPUs (NVIDIA/AMD) over integrated graphics if an array is returned.
+                    let gpus: Vec<&serde_json::Value> = if val.is_array() {
+                        val.as_array().unwrap().iter().collect()
+                    } else {
+                        vec![&val]
+                    };
 
-                        return GpuInfoResponse {
-                            model: name,
-                            vendor,
-                            dedicated_memory_bytes: vram,
-                            shared_memory_bytes: 17179869184,
-                            usage_percentage: 15.0,
-                            temperature_c: Some(42),
-                            power_draw_watts: Some(95),
-                            driver_version: driver,
-                            displays_connected: vec!["Pantalla Principal (DP / HDMI)".to_string()],
-                            available_note: None,
-                        };
-                    }
+                    let selected = gpus.iter().find(|g| {
+                        let name = g.get("Name").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
+                        name.contains("nvidia") || name.contains("radeon") || name.contains("rtx") || name.contains("geforce")
+                    }).copied().unwrap_or(gpus[0]);
+
+                    let name = selected.get("Name").and_then(|v| v.as_str()).unwrap_or("Adaptador gráfico").to_string();
+                    let vram = selected.get("AdapterRAM").and_then(|v| v.as_u64()).unwrap_or(0);
+                    let driver = selected.get("DriverVersion").and_then(|v| v.as_str()).unwrap_or("No disponible").to_string();
+                    let vendor = if name.to_lowercase().contains("nvidia") {
+                        "NVIDIA Corporation".to_string()
+                    } else if name.to_lowercase().contains("amd") || name.to_lowercase().contains("radeon") {
+                        "Advanced Micro Devices, Inc.".to_string()
+                    } else if name.to_lowercase().contains("intel") {
+                        "Intel Corporation".to_string()
+                    } else {
+                        "Fabricante de pantalla".to_string()
+                    };
+
+                    return GpuInfoResponse {
+                        model: name,
+                        vendor,
+                        dedicated_memory_bytes: vram,
+                        shared_memory_bytes: 0,
+                        usage_percentage: 0.0,
+                        temperature_c: None,
+                        power_draw_watts: None,
+                        driver_version: driver,
+                        displays_connected: vec!["Pantalla Principal".to_string()],
+                        available_note: None,
+                    };
                 }
             }
         }
@@ -538,13 +557,43 @@ pub fn get_gpu_info() -> GpuInfoResponse {
 
 #[tauri::command]
 pub fn get_motherboard_info() -> MotherboardBiosResponse {
+    #[cfg(target_os = "windows")]
+    {
+        let mut cmd = Command::new("powershell");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.args(&[
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product | ConvertTo-Json"
+        ]);
+
+        if let Ok(out) = cmd.output() {
+            if out.status.success() {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&stdout) {
+                    let mfg = val.get("Manufacturer").and_then(|v| v.as_str()).unwrap_or("No disponible").to_string();
+                    let model = val.get("Product").and_then(|v| v.as_str()).unwrap_or("No disponible").to_string();
+                    return MotherboardBiosResponse {
+                        manufacturer: mfg,
+                        model,
+                        bios_vendor: "No disponible".to_string(),
+                        bios_version: "No disponible".to_string(),
+                        bios_release_date: "No disponible".to_string(),
+                        system_model: "No disponible".to_string(),
+                    };
+                }
+            }
+        }
+    }
+
     MotherboardBiosResponse {
-        manufacturer: "ASUSTeK COMPUTER INC.".to_string(),
-        model: "PRIME Z690-P D4".to_string(),
-        bios_vendor: "American Megatrends Inc.".to_string(),
-        bios_version: "2204".to_string(),
-        bios_release_date: "11/15/2023".to_string(),
-        system_model: "System Product Name".to_string(),
+        manufacturer: "No disponible".to_string(),
+        model: "No disponible".to_string(),
+        bios_vendor: "No disponible".to_string(),
+        bios_version: "No disponible".to_string(),
+        bios_release_date: "No disponible".to_string(),
+        system_model: "No disponible".to_string(),
     }
 }
 
@@ -581,15 +630,15 @@ pub fn get_processes() -> Vec<ProcessInfoResponse> {
             cpu_usage_percentage,
             memory_bytes,
             virtual_memory_bytes: process.virtual_memory(),
-            read_bytes_per_sec: 1024,
-            write_bytes_per_sec: 2048,
-            threads_count: 8,
+            read_bytes_per_sec: 0,
+            write_bytes_per_sec: 0,
+            threads_count: 1,
             exe_path,
             user,
             status,
             is_critical,
             start_time: "Sesión activa".to_string(),
-            publisher: "Microsoft / Firmado".to_string(),
+            publisher: "No disponible".to_string(),
             is_elevated: pid_u32 <= 4,
         });
     }
@@ -660,9 +709,10 @@ pub fn kill_process_tree(pid: u32) -> ProcessKillResponse {
     #[cfg(target_os = "windows")]
     {
         let pid_str = pid.to_string();
-        let status = Command::new("taskkill")
-            .args(&["/F", "/T", "/PID", &pid_str])
-            .status();
+        let mut cmd = Command::new("taskkill");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.args(&["/F", "/T", "/PID", &pid_str]);
+        let status = cmd.status();
 
         return match status {
             Ok(s) if s.success() => ProcessKillResponse {

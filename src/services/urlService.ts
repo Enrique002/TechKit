@@ -29,13 +29,23 @@ export const urlService = {
 
     if (isTauriEnv()) {
       try {
-        const res = await invoke<any>('open_external_url', { url: cleanUrl });
+        const { openUrl } = await import('@tauri-apps/plugin-opener');
+        await openUrl(cleanUrl);
         return {
-          success: Boolean(res.success),
-          message: res.message || 'Página web abierta en el navegador predeterminado.',
+          success: true,
+          message: 'Enlace abierto en el navegador predeterminado de Windows sin consola.',
         };
-      } catch (err: any) {
-        console.warn('Tauri invoke open_external_url failed, trying window.open fallback:', err);
+      } catch (openerErr) {
+        console.warn('Tauri plugin-opener failed, trying backend command fallback:', openerErr);
+        try {
+          const res = await invoke<any>('open_external_url', { url: cleanUrl });
+          return {
+            success: Boolean(res.success),
+            message: res.message || 'Página web abierta en el navegador predeterminado.',
+          };
+        } catch (err: any) {
+          console.warn('Tauri invoke open_external_url failed, trying window.open fallback:', err);
+        }
       }
     }
 
