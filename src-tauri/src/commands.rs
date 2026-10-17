@@ -69,6 +69,7 @@ pub struct DiskVolume {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GpuInfoResponse {
     pub model: String,
     pub vendor: String,
@@ -295,10 +296,18 @@ pub fn open_external_url(url: String) -> UrlOpenResponse {
         };
     }
 
+    // Validate characters to prevent shell injection / unsafe characters
+    if clean.contains('"') || clean.contains('\'') || clean.contains('`') || clean.contains(' ') || clean.contains('&') || clean.contains('|') || clean.contains(';') || clean.contains('^') {
+        return UrlOpenResponse {
+            success: false,
+            message: "La URL contiene caracteres no permitidos.".to_string(),
+        };
+    }
+
     #[cfg(target_os = "windows")]
     {
-        let status = Command::new("cmd")
-            .args(&["/C", "start", "", clean])
+        let status = Command::new("powershell")
+            .args(&["-NoProfile", "-NonInteractive", "-Command", "Start-Process", clean])
             .status();
 
         return match status {
@@ -503,7 +512,7 @@ pub fn get_gpu_info() -> GpuInfoResponse {
                             temperature_c: Some(42),
                             power_draw_watts: Some(95),
                             driver_version: driver,
-                            displaysConnected: vec!["Pantalla Principal (DP / HDMI)".to_string()],
+                            displays_connected: vec!["Pantalla Principal (DP / HDMI)".to_string()],
                             available_note: None,
                         };
                     }
@@ -512,18 +521,18 @@ pub fn get_gpu_info() -> GpuInfoResponse {
         }
     }
 
-    // Default real fallback detection structure for test/non-windows environments
+    // Fallback when GPU details cannot be retrieved or non-Windows environment
     GpuInfoResponse {
-        model: "NVIDIA GeForce RTX 5080".to_string(),
-        vendor: "NVIDIA Corporation".to_string(),
-        dedicated_memory_bytes: 17179869184, // 16 GB VRAM
-        shared_memory_bytes: 34359738368,
-        usage_percentage: 18.0,
-        temperature_c: Some(39),
-        power_draw_watts: Some(110),
-        driver_version: "555.99 (WHQL)".to_string(),
-        displaysConnected: vec!["DisplayPort 1: 3840x2160 @ 144Hz (NVIDIA G-SYNC)".to_string()],
-        available_note: None,
+        model: "Adaptador gráfico predeterminado / No detectado".to_string(),
+        vendor: "No disponible".to_string(),
+        dedicated_memory_bytes: 0,
+        shared_memory_bytes: 0,
+        usage_percentage: 0.0,
+        temperature_c: None,
+        power_draw_watts: None,
+        driver_version: "No disponible".to_string(),
+        displays_connected: vec!["Pantalla principal del sistema".to_string()],
+        available_note: Some("Requiere ejecutarse en Windows con controladores gráficos compatibles para obtener telemetría detallada de la GPU.".to_string()),
     }
 }
 
@@ -643,15 +652,39 @@ pub fn kill_process_tree(pid: u32) -> ProcessKillResponse {
     if pid <= 4 {
         return ProcessKillResponse {
             success: false,
-            message: format!("El proceso con PID {} es protegido del sistema.", pid),
+            message: format!("El proceso con PID {} es un proceso protegido del sistema.", pid),
             pid,
         };
     }
 
-    ProcessKillResponse {
-        success: true,
-        message: format!("Árbol de procesos del PID {} finalizado correctamente.", pid),
-        pid,
+    #[cfg(target_os = "windows")]
+    {
+        let pid_str = pid.to_string();
+        let status = Command::new("taskkill")
+            .args(&["/F", "/T", "/PID", &pid_str])
+            .status();
+
+        return match status {
+            Ok(s) if s.success() => ProcessKillResponse {
+                success: true,
+                message: format!("Árbol de procesos del PID {} finalizado correctamente.", pid),
+                pid,
+            },
+            _ => ProcessKillResponse {
+                success: false,
+                message: format!("No se pudo finalizar el árbol de procesos para el PID {}. Puede requerir permisos de Administrador.", pid),
+                pid,
+            },
+        };
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        ProcessKillResponse {
+            success: true,
+            message: format!("Solicitud de finalización del árbol de procesos PID {} procesada.", pid),
+            pid,
+        }
     }
 }
 

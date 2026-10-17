@@ -242,14 +242,14 @@ export const systemService = {
         return {
           model: res.model || 'Adaptador de pantalla básico',
           vendor: res.vendor || 'Microsoft/NVIDIA/AMD/Intel',
-          dedicatedMemoryBytes: res.dedicated_memory_bytes || 0,
-          sharedMemoryBytes: res.shared_memory_bytes || 0,
-          usagePercentage: res.usage_percentage || 0,
-          temperatureC: res.temperature_c,
-          powerDrawWatts: res.power_draw_watts,
-          driverVersion: res.driver_version || 'WHQL',
-          displaysConnected: res.displays_connected || ['Pantalla principal'],
-          availableNote: res.available_note,
+          dedicatedMemoryBytes: res.dedicatedMemoryBytes ?? res.dedicated_memory_bytes ?? 0,
+          sharedMemoryBytes: res.sharedMemoryBytes ?? res.shared_memory_bytes ?? 0,
+          usagePercentage: res.usagePercentage ?? res.usage_percentage ?? 0,
+          temperatureC: res.temperatureC ?? res.temperature_c,
+          powerDrawWatts: res.powerDrawWatts ?? res.power_draw_watts,
+          driverVersion: res.driverVersion ?? res.driver_version ?? 'WHQL',
+          displaysConnected: res.displaysConnected ?? res.displays_connected ?? ['Pantalla principal'],
+          availableNote: res.availableNote ?? res.available_note,
         };
       } catch (err) {
         console.warn('Tauri invoke get_gpu_info failed, using fallback:', err);
