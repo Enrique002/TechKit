@@ -66,10 +66,11 @@ export const StorageView: React.FC = () => {
                   <div
                     style={{
                       padding: '10px',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: 0,
                       backgroundColor: 'var(--bg-tertiary)',
                       color: 'var(--accent-color)',
                       display: 'flex',
+                      border: '1px solid var(--border-color)',
                     }}
                   >
                     {vol.isRemovable ? <Disc size={24} /> : <HardDrive size={24} />}
@@ -106,7 +107,7 @@ export const StorageView: React.FC = () => {
                     Libre: {formatBytes(vol.availableBytes)}
                   </span>
                 </div>
-                <div style={{ height: '10px', backgroundColor: 'var(--bg-primary)', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ height: '10px', backgroundColor: 'var(--bg-primary)', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                   <div
                     style={{
                       height: '100%',

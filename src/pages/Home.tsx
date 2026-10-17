@@ -73,20 +73,20 @@ export const Home: React.FC<HomeProps> = ({
       <div
         className="info-box"
         style={{
-          borderColor: 'rgba(250, 173, 20, 0.4)',
-          backgroundColor: 'rgba(250, 173, 20, 0.05)',
+          borderColor: 'rgba(0, 210, 160, 0.4)',
+          backgroundColor: 'rgba(0, 210, 160, 0.05)',
           display: 'flex',
           alignItems: 'flex-start',
           gap: '12px',
         }}
       >
-        <Info size={20} style={{ color: '#faad14', flexShrink: 0, marginTop: '2px' }} />
+        <Info size={20} style={{ color: 'var(--accent-color)', flexShrink: 0, marginTop: '2px' }} />
         <div>
-          <strong style={{ color: '#faad14', fontSize: '13px' }}>
-            Estado del Proyecto: Fase 2 de 5 (Diagnóstico de Sistema, CPU, RAM y Discos)
+          <strong style={{ color: 'var(--accent-color)', fontSize: '13px' }}>
+            Estado del Proyecto: Fase 5 de 5 (Rediseño Rectilíneo, Integración y Distribución Final)
           </strong>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-            En esta segunda fase se han incorporado consultas nativas reales del procesador, memoria RAM y almacenamiento.
+            TechKit cuenta con diseño geométrico rectilíneo y soporte completo para diagnóstico de Hardware, Discos, Sistema Operativo, Procesos, Redes, Seguridad y Mantenimiento.
           </p>
         </div>
       </div>

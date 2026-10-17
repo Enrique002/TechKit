@@ -86,7 +86,7 @@ export const CATEGORIES: CategoryInfo[] = [
 ];
 
 export const INITIAL_TOOLS: Tool[] = [
-  // Resumen / Sistema operativo (Funcional en Fase 2)
+  // Resumen / Sistema operativo
   {
     id: 'sys-summary-info',
     name: 'Resumen del Equipo y Windows',
@@ -100,7 +100,7 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Muestra información real del sistema obtenida mediante consultas de la API nativa de Windows en Rust.'
   },
 
-  // Hardware y procesador (Funcional en Fase 2)
+  // Hardware y procesador
   {
     id: 'hw-cpu-info',
     name: 'Información del Procesador (CPU)',
@@ -138,7 +138,7 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Descarga HWiNFO64 desde la web oficial para un análisis minucioso de sensores de voltaje y frecuencia.'
   },
 
-  // Discos y almacenamiento (Funcional en Fase 2)
+  // Discos y almacenamiento
   {
     id: 'disk-storage-checker',
     name: 'Unidades y Almacenamiento',
@@ -154,10 +154,10 @@ export const INITIAL_TOOLS: Tool[] = [
   {
     id: 'disk-mgmt-win',
     name: 'Administrador de discos de Windows',
-    description: 'Abre la consola de administración de particiones y volúmenes de Windows (diskmgmt.msc).',
+    description: 'Consola de administración de particiones y volúmenes de Windows (diskmgmt.msc).',
     category: 'disks',
     type: 'windows_builtin',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows todas las versiones',
     keywords: ['disco', 'particiones', 'formatear', 'volumen', 'diskmgmt'],
     instructions: 'Permite gestionar particiones y asignar letras de unidad en Windows.'
@@ -175,17 +175,18 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Visita el sitio oficial de CrystalMark para descargar la versión portable o instalable.'
   },
 
-  // Procesos y servicios (Pendientes para Fase 4)
+  // Procesos y servicios
   {
     id: 'proc-task-mgr',
-    name: 'Administrador de Tareas de Windows',
-    description: 'Acceso directo a la herramienta nativa de monitorización de procesos y rendimiento.',
+    name: 'Monitor de Procesos y Servicios TechKit',
+    description: 'Inspecciona la lista de procesos activos del sistema, uso de CPU/RAM y estado de servicios de Windows.',
     category: 'processes',
-    type: 'windows_builtin',
-    status: 'pending',
-    compatibility: 'Windows todas las versiones',
-    keywords: ['procesos', 'servicios', 'rendimiento', 'tarea', 'taskmgr', 'cpu', 'memoria RAM'],
-    instructions: 'Muestra el uso en tiempo real de recursos y procesos activos.'
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['procesos', 'servicios', 'rendimiento', 'tarea', 'taskmgr', 'cpu', 'memoria RAM', 'PID'],
+    instructions: 'Inspecciona la lista de tareas activas filtrando por nombre o número de proceso PID.'
   },
   {
     id: 'proc-process-explorer',
@@ -200,28 +201,28 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Descarga directamente desde Microsoft Sysinternals.'
   },
 
-  // Redes y conectividad (Pendientes para Fase 3)
+  // Redes y conectividad
   {
     id: 'net-ip-config',
-    name: 'Visor de Configuración de Red e IP',
-    description: 'Muestra adaptadores de red activos, dirección IP, máscara de subred y puerta de enlace.',
+    name: 'Visor de Redes e Interfaces',
+    description: 'Muestra adaptadores de red activos, dirección IP, dirección MAC y tráfico enviado/recibido.',
     category: 'network',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
     keywords: ['redes', 'direccion IP', 'ip', 'mac', 'ethernet', 'wifi', 'gateway', 'mascara'],
-    instructions: 'Permite inspeccionar interfaces de red y renovar direcciones DHCP.'
+    instructions: 'Permite inspeccionar interfaces de red y estado de conexión.'
   },
   {
-    id: 'net-dns-flush',
-    name: 'Limpieza de Caché DNS',
-    description: 'Ejecuta la purga del resolvedor de nombres DNS de Windows para solventar problemas de conexión.',
+    id: 'net-ping-tool',
+    name: 'Diagnóstico de Latencia y Ping ICMP',
+    description: 'Ejecuta pruebas de ping a direcciones IP o nombres de dominio para verificar conectividad y latencia.',
     category: 'network',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
-    keywords: ['DNS', 'direccion IP', 'redes', 'ipconfig', 'flushdns', 'conexion', 'puertos'],
-    instructions: 'Útil cuando hay problemas de resolución de nombres de dominio.'
+    keywords: ['DNS', 'direccion IP', 'redes', 'ping', 'icmp', 'conexion', 'puertos', 'latencia'],
+    instructions: 'Introduce un host o dirección IP para medir la latencia en milisegundos.'
   },
   {
     id: 'net-wireshark',
@@ -239,14 +240,14 @@ export const INITIAL_TOOLS: Tool[] = [
   // Archivos y seguridad
   {
     id: 'sec-hash-calculator',
-    name: 'Calculadora de Hash de Archivos',
-    description: 'Genera huellas digitales MD5, SHA-1 y SHA-256 para verificar la integridad de archivos.',
+    name: 'Calculadora de Hashes y Verificador de Integridad',
+    description: 'Genera huellas digitales MD5, SHA-1 y SHA-256 para verificar la integridad de archivos o cadenas de texto.',
     category: 'security',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Todas las plataformas',
-    keywords: ['hash', 'archivos', 'sha256', 'md5', 'integridad', 'verificar'],
-    instructions: 'Soporta arrastrar y soltar archivos para verificar sumas de comprobación.'
+    keywords: ['hash', 'archivos', 'sha256', 'md5', 'sha1', 'integridad', 'verificar'],
+    instructions: 'Soporta cálculo automático de huellas digitales de archivos locales e igualación de sumas de comprobación.'
   },
   {
     id: 'sec-virustotal',
@@ -263,27 +264,27 @@ export const INITIAL_TOOLS: Tool[] = [
 
   // Mantenimiento y reparación
   {
-    id: 'maint-sfc-scannow',
-    name: 'Comprobador de Archivos de Sistema (SFC)',
-    description: 'Guía y ejecución controlada del comando sfc /scannow de Windows para reparar archivos dañados.',
-    category: 'maintenance',
-    type: 'windows_builtin',
-    status: 'pending',
-    compatibility: 'Windows 10 / 11',
-    permissions: 'Administrador requerido',
-    keywords: ['mantenimiento', 'limpieza', 'errores de Windows', 'sfc', 'scannow', 'recuperacion', 'reparacion'],
-    instructions: 'Examina la integridad de todos los archivos protegidos del sistema.'
-  },
-  {
     id: 'maint-temp-cleaner',
     name: 'Limpiador de Archivos Temporales',
-    description: 'Identifica y elimina archivos temporales de usuario y caché del sistema.',
+    description: 'Identifica y elimina archivos temporales de usuario (%TEMP%) y caché del sistema de forma segura con confirmación.',
     category: 'maintenance',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
     keywords: ['limpieza', 'mantenimiento', 'temporales', 'espacio', 'disco'],
-    instructions: 'Libera espacio en disco eliminando archivos innecesarios de %TEMP%.'
+    instructions: 'Libera espacio en disco eliminando archivos innecesarios previa confirmación explícita.'
+  },
+  {
+    id: 'maint-sfc-scannow',
+    name: 'Comprobador de Archivos de Sistema (SFC / DISM)',
+    description: 'Guía y ejecución de los comandos sfc /scannow y DISM de Windows para escanear y reparar corrupción del sistema.',
+    category: 'maintenance',
+    type: 'windows_builtin',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Administrador requerido',
+    keywords: ['mantenimiento', 'limpieza', 'errores de Windows', 'sfc', 'scannow', 'dism', 'recuperacion', 'reparacion'],
+    instructions: 'Examina la integridad de todos los archivos protegidos del sistema.'
   },
 
   // Herramientas descargables
@@ -354,9 +355,13 @@ export const POPULAR_KEYWORDS = [
   'unidades',
   'espacio libre',
   'sistema operativo',
-  'información del equipo',
-  'DNS',
+  'procesos',
+  'servicios',
+  'redes',
   'direccion IP',
+  'ping',
   'hash',
+  'sha256',
+  'limpieza',
   'errores de Windows'
 ];

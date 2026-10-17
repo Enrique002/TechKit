@@ -89,7 +89,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="info-box">
           <div className="info-row">
             <span className="info-label">Versión de TechKit</span>
-            <span className="info-value">0.2.0 (Fase 2)</span>
+            <span className="info-value">1.0.0 (Fase 5 Final)</span>
           </div>
           <div className="info-row">
             <span className="info-label">Entorno Frontend</span>

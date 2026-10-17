@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "techkit",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "productName": "TechKit",
+  "version": "1.0.0",
+  "identifier": "com.techkit.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "TechKit",
-        "width": 800,
-        "height": 600,
+        "title": "TechKit — Kit de Herramientas para Técnicos",
+        "width": 1100,
+        "height": 750,
         "resizable": true,
         "fullscreen": false
       }
@@ -32,9 +32,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "android": {
-      "debugApplicationIdSuffix": ".debug"
-    }
+    ]
   }
 }

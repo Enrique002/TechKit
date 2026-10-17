@@ -8,6 +8,10 @@ import { SystemSummaryView } from '../components/views/SystemSummaryView';
 import { CpuView } from '../components/views/CpuView';
 import { MemoryView } from '../components/views/MemoryView';
 import { StorageView } from '../components/views/StorageView';
+import { ProcessesView } from '../components/views/ProcessesView';
+import { NetworkView } from '../components/views/NetworkView';
+import { SecurityView } from '../components/views/SecurityView';
+import { MaintenanceView } from '../components/views/MaintenanceView';
 
 interface CategoryPageProps {
   categoryId: CategoryId;
@@ -49,6 +53,14 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
         );
       case 'disks':
         return <StorageView />;
+      case 'processes':
+        return <ProcessesView />;
+      case 'network':
+        return <NetworkView />;
+      case 'security':
+        return <SecurityView />;
+      case 'maintenance':
+        return <MaintenanceView />;
       default:
         return null;
     }
