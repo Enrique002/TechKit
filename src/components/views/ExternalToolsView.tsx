@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, ExternalLink, Shield, Search } from 'lucide-react';
 import { catalogService } from '../../services/catalogService';
+import { urlService } from '../../services/urlService';
 import { Tool, CategoryId } from '../../types';
 
 interface ExternalToolsViewProps {
@@ -29,6 +30,16 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
     }
     return true;
   });
+
+  const handleOpenUrl = async (e: React.MouseEvent, url?: string) => {
+    e.stopPropagation();
+    if (url) {
+      const res = await urlService.openExternalUrl(url);
+      if (!res.success) {
+        alert(res.message);
+      }
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -156,10 +167,7 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
                 <button
                   className="btn-primary"
                   style={{ fontSize: '11px', padding: '4px 10px' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (tool.officialUrl) window.open(tool.officialUrl, '_blank', 'noopener,noreferrer');
-                  }}
+                  onClick={(e) => handleOpenUrl(e, tool.officialUrl)}
                 >
                   <ExternalLink size={12} /> Sitio Oficial
                 </button>
