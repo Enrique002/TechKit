@@ -1,0 +1,3 @@
+## 2025-05-20 - Catalog dynamic mapping anti-pattern
+**Learning:** `catalogService.getAllTools()` transforms static data (`EXTERNAL_TOOLS_CATALOG`) into runtime objects on every invocation. Since `App.tsx`, `Sidebar.tsx`, and view components invoke catalog lookup methods multiple times per render pass (e.g. while typing search queries or switching tabs), returning un-memoized arrays leads to heavy object allocation and Garbage Collection pressure.
+**Action:** Always cache or memoize static catalog transformations at the module or service layer so getters like `getAllTools()` return a stable $O(1)$ reference.

@@ -1,6 +1,11 @@
 import { CategoryId, CategoryInfo, Tool } from '../types';
 import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
+// Performance Optimization: Cache the merged list of tools in memory to avoid repeatedly
+// mapping EXTERNAL_TOOLS_CATALOG, concatenating arrays, and allocating object instances
+// on every component render and search query.
+let cachedTools: Tool[] | null = null;
+
 export const catalogService = {
   getCategories(): CategoryInfo[] {
     return CATEGORIES;
@@ -15,6 +20,10 @@ export const catalogService = {
   },
 
   getAllTools(): Tool[] {
+    if (cachedTools) {
+      return cachedTools;
+    }
+
     const nativeTools = INITIAL_TOOLS;
     const externalTools: Tool[] = EXTERNAL_TOOLS_CATALOG.map((ext) => ({
       id: ext.id,
@@ -31,7 +40,8 @@ export const catalogService = {
       externalDetails: ext,
     }));
 
-    return [...nativeTools, ...externalTools];
+    cachedTools = [...nativeTools, ...externalTools];
+    return cachedTools;
   },
 
   getExternalTools(): Tool[] {
