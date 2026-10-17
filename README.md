@@ -1,20 +1,8 @@
 # TechKit — Kit de Herramientas para Técnicos Informáticos
 
-**Estado: en desarrollo. Fase 3 de 5.**
+**Estado: en desarrollo.**
 
 TechKit es una aplicación de escritorio diseñada para técnicos informáticos y administradores de sistemas que centraliza herramientas de diagnóstico, gestión de procesos y servicios, utilidades de red, mantenimiento y guías de resolución de incidencias en un panel unificado.
-
----
-
-## Rediseño Visual Rectilíneo (Fase 5)
-
-El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
-- Un **buscador global** de herramientas, comandos y palabras clave habituales.
-- Una **navegación estructurada** por categorías técnicas (Hardware, Discos, Sistema Operativo, Procesos y servicios, Redes y conectividad, Seguridad, Mantenimiento, Herramientas Descargables y Guías).
-- Un **sistema de favoritos** e **historial reciente** persistente.
-- **Consultas reales del sistema operativo**:
-  - **Fase 2:** Resumen del equipo, uso de procesador (CPU), memoria RAM física y análisis de volúmenes de almacenamiento.
-  - **Fase 3:** Gestor de procesos activos con finalización segura, administrador de servicios de Windows, diagnóstico de interfaces de red, herramientas de conectividad (Ping ICMP, resolución DNS, trazado de rutas) e inspección de puertos y sockets activos.
 
 ---
 
@@ -29,7 +17,7 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## Funcionalidades Implementadas (Fase 3)
+## Funcionalidades Implementadas
 
 1. **Gestor de Procesos de Windows**:
    - Consulta de procesos activos con PID, uso de CPU %, consumo de memoria RAM, ejecutable y usuario propietario.
