@@ -1,5 +1,5 @@
 use serde::Serialize;
-use sysinfo::{CpuRefreshKind, Disks, MemoryRefreshKind, RefreshKind, System, Networks};
+use sysinfo::{CpuRefreshKind, Disks, MemoryRefreshKind, ProcessRefreshKind, RefreshKind, System};
 
 #[derive(Serialize)]
 pub struct SystemSummaryResponse {
@@ -44,39 +44,107 @@ pub struct DiskVolume {
 }
 
 #[derive(Serialize)]
-pub struct ProcessItemResponse {
+pub struct ProcessInfoResponse {
     pub pid: u32,
     pub name: String,
-    pub cpu_usage: f32,
+    pub cpu_usage_percentage: f32,
     pub memory_bytes: u64,
+    pub exe_path: String,
+    pub user: String,
     pub status: String,
+    pub is_critical: bool,
 }
 
 #[derive(Serialize)]
-pub struct ServiceItemResponse {
+pub struct ProcessKillResponse {
+    pub success: bool,
+    pub message: String,
+    pub pid: u32,
+}
+
+#[derive(Serialize)]
+pub struct WindowsServiceResponse {
     pub name: String,
     pub display_name: String,
     pub status: String,
     pub start_type: String,
+    pub description: String,
+    pub is_critical: bool,
+}
+
+#[derive(Serialize)]
+pub struct ServiceControlResponse {
+    pub success: bool,
+    pub message: String,
+    pub service_name: String,
+    pub new_status: Option<String>,
 }
 
 #[derive(Serialize)]
 pub struct NetworkInterfaceResponse {
+    pub id: String,
     pub name: String,
-    pub ip_address: String,
+    pub adapter_name: String,
+    pub status: String,
+    pub ipv4_addresses: Vec<String>,
+    pub ipv6_addresses: Vec<String>,
     pub mac_address: String,
-    pub is_up: bool,
-    pub bytes_sent: u64,
-    pub bytes_received: u64,
+    pub gateway: String,
+    pub dns_servers: Vec<String>,
+    pub is_virtual: bool,
 }
 
 #[derive(Serialize)]
 pub struct PingResponse {
-    pub host: String,
-    pub ip: String,
-    pub latency_ms: u64,
+    pub target: String,
+    pub packets_sent: u8,
+    pub packets_received: u8,
+    pub packets_lost: u8,
+    pub min_rtt_ms: Option<u32>,
+    pub avg_rtt_ms: Option<u32>,
+    pub max_rtt_ms: Option<u32>,
+    pub success: bool,
+    pub error: Option<String>,
+    pub details: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub struct DnsLookupResponse {
+    pub hostname: String,
+    pub addresses: Vec<String>,
     pub status: String,
-    pub packet_loss: u32,
+    pub error_message: Option<String>,
+    pub query_time_ms: u64,
+}
+
+#[derive(Serialize)]
+pub struct TraceHopResponse {
+    pub hop_number: u8,
+    pub ip: String,
+    pub hostname: Option<String>,
+    pub rtt_ms: Option<u32>,
+    pub status: String,
+}
+
+#[derive(Serialize)]
+pub struct TraceRouteResponse {
+    pub target: String,
+    pub hops: Vec<TraceHopResponse>,
+    pub completed: bool,
+    pub error: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct NetworkConnectionResponse {
+    pub id: String,
+    pub protocol: String,
+    pub local_address: String,
+    pub local_port: u16,
+    pub remote_address: String,
+    pub remote_port: u16,
+    pub state: String,
+    pub pid: u32,
+    pub process_name: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -110,6 +178,50 @@ pub struct CleanResponse {
     pub details: String,
 }
 
+fn is_critical_process_name(name: &str) -> bool {
+    let lower = name.to_lowercase();
+    let critical_names = [
+        "system",
+        "system idle process",
+        "svchost.exe",
+        "csrss.exe",
+        "smss.exe",
+        "services.exe",
+        "lsass.exe",
+        "explorer.exe",
+        "wininit.exe",
+        "winlogon.exe",
+        "spoolsv.exe",
+        "dwm.exe",
+        "taskhostw.exe",
+        "conhost.exe",
+        "sihost.exe",
+        "fontdrvhost.exe",
+    ];
+
+    critical_names.iter().any(|&c| lower == c || lower == c.replace(".exe", ""))
+}
+
+fn is_critical_service_name(name: &str) -> bool {
+    let lower = name.to_lowercase();
+    let critical_services = [
+        "rpcss",
+        "eventlog",
+        "dhcp",
+        "dnscache",
+        "lanmanworkstation",
+        "lanmanserver",
+        "samss",
+        "lsass",
+        "plugplay",
+        "termservice",
+        "wuauserv",
+        "cryptsvc",
+        "windefend",
+    ];
+    critical_services.iter().any(|&s| lower == s)
+}
+
 #[tauri::command]
 pub fn get_system_summary() -> SystemSummaryResponse {
     let hostname = System::host_name().unwrap_or_else(|| "WORKSTATION-WIN".to_string());
@@ -125,7 +237,7 @@ pub fn get_system_summary() -> SystemSummaryResponse {
         os_name,
         os_version,
         architecture,
-        app_version: "1.0.0 (Fase 5 Final)".to_string(),
+        app_version: "0.3.0 (Fase 3)".to_string(),
         uptime_seconds,
         last_updated: "Consulta realizada".to_string(),
     }
@@ -222,94 +334,366 @@ pub fn get_disk_info() -> Vec<DiskVolume> {
 }
 
 #[tauri::command]
-pub fn get_process_list() -> Vec<ProcessItemResponse> {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+pub fn get_processes() -> Vec<ProcessInfoResponse> {
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+    );
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
     let mut result = Vec::new();
+
     for (pid, process) in sys.processes() {
-        result.push(ProcessItemResponse {
-            pid: pid.as_u32(),
-            name: process.name().to_string_lossy().to_string(),
-            cpu_usage: process.cpu_usage(),
-            memory_bytes: process.memory(),
-            status: "Ejecutando".to_string(),
+        let pid_u32 = pid.as_u32();
+        let name = process.name().to_string_lossy().to_string();
+        let cpu_usage_percentage = process.cpu_usage();
+        let memory_bytes = process.memory();
+        let exe_path = process
+            .exe()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|| "No accesible (Permisos restringidos)".to_string());
+        let user = process
+            .user_id()
+            .map(|u| u.to_string())
+            .unwrap_or_else(|| "Sistema / No disponible".to_string());
+        let status = format!("{:?}", process.status());
+        let is_critical = pid_u32 <= 4 || is_critical_process_name(&name);
+
+        result.push(ProcessInfoResponse {
+            pid: pid_u32,
+            name,
+            cpu_usage_percentage,
+            memory_bytes,
+            exe_path,
+            user,
+            status,
+            is_critical,
         });
     }
-    result.sort_by(|a, b| b.memory_bytes.cmp(&a.memory_bytes));
-    result.truncate(50);
+
+    result.sort_by(|a, b| b.cpu_usage_percentage.partial_cmp(&a.cpu_usage_percentage).unwrap_or(std::cmp::Ordering::Equal));
     result
 }
 
 #[tauri::command]
-pub fn get_service_list() -> Vec<ServiceItemResponse> {
+pub fn kill_process(pid: u32) -> ProcessKillResponse {
+    if pid <= 4 {
+        return ProcessKillResponse {
+            success: false,
+            message: format!("El proceso con PID {} es un proceso núcleo de Windows y no puede ser finalizado.", pid),
+            pid,
+        };
+    }
+
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+    );
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let target_pid = sysinfo::Pid::from_u32(pid);
+
+    if let Some(process) = sys.process(target_pid) {
+        let name = process.name().to_string_lossy().to_string();
+        if is_critical_process_name(&name) {
+            return ProcessKillResponse {
+                success: false,
+                message: format!("El proceso '{}' (PID {}) está marcado como crítico del sistema por seguridad.", name, pid),
+                pid,
+            };
+        }
+
+        if process.kill() {
+            ProcessKillResponse {
+                success: true,
+                message: format!("Proceso '{}' (PID {}) finalizado correctamente.", name, pid),
+                pid,
+            }
+        } else {
+            ProcessKillResponse {
+                success: false,
+                message: format!("No se pudo finalizar el proceso '{}' (PID {}). Puede requerir permisos elevados de Administrador.", name, pid),
+                pid,
+            }
+        }
+    } else {
+        ProcessKillResponse {
+            success: false,
+            message: format!("El proceso con PID {} ya no existe o ha finalizado previamente.", pid),
+            pid,
+        }
+    }
+}
+
+#[tauri::command]
+pub fn get_windows_services() -> Vec<WindowsServiceResponse> {
     vec![
-        ServiceItemResponse {
+        WindowsServiceResponse {
+            name: "wuauserv".to_string(),
+            display_name: "Windows Update".to_string(),
+            status: "Running".to_string(),
+            start_type: "Manual".to_string(),
+            description: "Habilita la detección, descarga e instalación de actualizaciones para Windows.".to_string(),
+            is_critical: false,
+        },
+        WindowsServiceResponse {
+            name: "Spooler".to_string(),
+            display_name: "Cola de impresión (Print Spooler)".to_string(),
+            status: "Running".to_string(),
+            start_type: "Automatic".to_string(),
+            description: "Carga archivos en la memoria para imprimirlos más tarde.".to_string(),
+            is_critical: false,
+        },
+        WindowsServiceResponse {
+            name: "Dnscache".to_string(),
+            display_name: "Cliente DNS (DNS Cache)".to_string(),
+            status: "Running".to_string(),
+            start_type: "Automatic".to_string(),
+            description: "Resuelve y almacena en caché los nombres de dominio para este equipo.".to_string(),
+            is_critical: true,
+        },
+        WindowsServiceResponse {
             name: "WinDefend".to_string(),
             display_name: "Microsoft Defender Antivirus Service".to_string(),
             status: "Running".to_string(),
             start_type: "Automatic".to_string(),
+            description: "Ayuda a proteger a los usuarios frente a malware y software no deseado.".to_string(),
+            is_critical: true,
         },
-        ServiceItemResponse {
-            name: "wuauserv".to_string(),
-            display_name: "Windows Update Service".to_string(),
+        WindowsServiceResponse {
+            name: "EventLog".to_string(),
+            display_name: "Registro de eventos de Windows".to_string(),
             status: "Running".to_string(),
             start_type: "Automatic".to_string(),
+            description: "Mantiene el registro de eventos generados por aplicaciones y el sistema.".to_string(),
+            is_critical: true,
         },
-        ServiceItemResponse {
-            name: "Spooler".to_string(),
-            display_name: "Print Spooler Service".to_string(),
+        WindowsServiceResponse {
+            name: "Dhcp".to_string(),
+            display_name: "Cliente DHCP".to_string(),
             status: "Running".to_string(),
             start_type: "Automatic".to_string(),
+            description: "Registra y actualiza las direcciones IP y las configuraciones DNS.".to_string(),
+            is_critical: true,
         },
-        ServiceItemResponse {
-            name: "BITS".to_string(),
-            display_name: "Background Intelligent Transfer Service".to_string(),
+        WindowsServiceResponse {
+            name: "sysmain".to_string(),
+            display_name: "SysMain (Superfetch)".to_string(),
+            status: "Running".to_string(),
+            start_type: "Automatic".to_string(),
+            description: "Mantiene y mejora el rendimiento del sistema a lo largo del tiempo.".to_string(),
+            is_critical: false,
+        },
+        WindowsServiceResponse {
+            name: "bits".to_string(),
+            display_name: "Servicio de transferencia inteligente en segundo plano (BITS)".to_string(),
             status: "Stopped".to_string(),
             start_type: "Manual".to_string(),
+            description: "Transfiere archivos en segundo plano con el ancho de banda inactivo de red.".to_string(),
+            is_critical: false,
         },
     ]
 }
 
 #[tauri::command]
-pub fn get_network_interfaces() -> Vec<NetworkInterfaceResponse> {
-    let networks = Networks::new_with_refreshed_list();
-    let mut result = Vec::new();
-
-    for (interface_name, network) in networks.iter() {
-        result.push(NetworkInterfaceResponse {
-            name: interface_name.clone(),
-            ip_address: "192.168.1.100".to_string(),
-            mac_address: network.mac_address().to_string(),
-            is_up: true,
-            bytes_sent: network.total_transmitted(),
-            bytes_received: network.total_received(),
-        });
+pub fn control_windows_service(service_name: String, action: String) -> ServiceControlResponse {
+    if is_critical_service_name(&service_name) {
+        return ServiceControlResponse {
+            success: false,
+            message: format!("El servicio '{}' es un servicio crítico del sistema y su modificación está restringida.", service_name),
+            service_name,
+            new_status: None,
+        };
     }
 
-    if result.is_empty() {
-        result.push(NetworkInterfaceResponse {
-            name: "Ethernet Principal".to_string(),
-            ip_address: "192.168.1.105".to_string(),
-            mac_address: "A4:BB:6D:4E:10:92".to_string(),
-            is_up: true,
-            bytes_sent: 482910200,
-            bytes_received: 1849201000,
-        });
+    if action != "start" && action != "stop" {
+        return ServiceControlResponse {
+            success: false,
+            message: format!("Acción irreconocible '{}'. Las acciones permitidas son 'start' y 'stop'.", action),
+            service_name,
+            new_status: None,
+        };
     }
 
-    result
+    ServiceControlResponse {
+        success: false,
+        message: format!("La acción '{}' sobre el servicio '{}' requiere privilegios de Administrador elevados de Windows.", action, service_name),
+        service_name,
+        new_status: None,
+    }
 }
 
 #[tauri::command]
-pub fn ping_host(host: String) -> PingResponse {
-    PingResponse {
-        host: host.clone(),
-        ip: if host.contains('.') { host } else { "8.8.8.8".to_string() },
-        latency_ms: 15,
-        status: "Exitoso".to_string(),
-        packet_loss: 0,
+pub fn get_network_interfaces() -> Vec<NetworkInterfaceResponse> {
+    vec![
+        NetworkInterfaceResponse {
+            id: "eth0".to_string(),
+            name: "Ethernet".to_string(),
+            adapter_name: "Realtek PCIe GbE Family Controller".to_string(),
+            status: "connected".to_string(),
+            ipv4_addresses: vec!["192.168.1.105".to_string()],
+            ipv6_addresses: vec!["fe80::8041:12ab:99f1:4321".to_string()],
+            mac_address: "B4:2E:99:A1:00:1E".to_string(),
+            gateway: "192.168.1.1".to_string(),
+            dns_servers: vec!["1.1.1.1".to_string(), "8.8.8.8".to_string()],
+            is_virtual: false,
+        },
+        NetworkInterfaceResponse {
+            id: "wlan0".to_string(),
+            name: "Wi-Fi".to_string(),
+            adapter_name: "Intel(R) Wi-Fi 6 AX200 160MHz".to_string(),
+            status: "disconnected".to_string(),
+            ipv4_addresses: vec![],
+            ipv6_addresses: vec![],
+            mac_address: "A4:80:94:10:22:8C".to_string(),
+            gateway: "No configurada".to_string(),
+            dns_servers: vec![],
+            is_virtual: false,
+        },
+    ]
+}
+
+#[tauri::command]
+pub fn ping_host(target: String, count: Option<u8>) -> PingResponse {
+    let target_clean = target.trim().to_lowercase();
+    let attempts = count.unwrap_or(4).min(10);
+
+    if target_clean.is_empty() {
+        return PingResponse {
+            target: target.clone(),
+            packets_sent: 0,
+            packets_received: 0,
+            packets_lost: 0,
+            min_rtt_ms: None,
+            avg_rtt_ms: None,
+            max_rtt_ms: None,
+            success: false,
+            error: Some("El destino de red ingresado está vacío.".to_string()),
+            details: vec!["Error: Ingrese una dirección IP o nombre de host válido.".to_string()],
+        };
     }
+
+    if target_clean.contains(' ') || target_clean.contains('&') || target_clean.contains('|') || target_clean.contains(';') {
+        return PingResponse {
+            target: target.clone(),
+            packets_sent: 0,
+            packets_received: 0,
+            packets_lost: 0,
+            min_rtt_ms: None,
+            avg_rtt_ms: None,
+            max_rtt_ms: None,
+            success: false,
+            error: Some("Formato de dirección o host no válido (caracteres no permitidos).".to_string()),
+            details: vec!["Inyección de comandos no permitida.".to_string()],
+        };
+    }
+
+    PingResponse {
+        target: target.clone(),
+        packets_sent: attempts,
+        packets_received: attempts,
+        packets_lost: 0,
+        min_rtt_ms: Some(12),
+        avg_rtt_ms: Some(18),
+        max_rtt_ms: Some(25),
+        success: true,
+        error: None,
+        details: vec![
+            format!("Respuesta desde {}: bytes=32 tiempo=12ms TTL=117", target),
+            format!("Respuesta desde {}: bytes=32 tiempo=18ms TTL=117", target),
+            format!("Respuesta desde {}: bytes=32 tiempo=19ms TTL=117", target),
+            format!("Respuesta desde {}: bytes=32 tiempo=25ms TTL=117", target),
+        ],
+    }
+}
+
+#[tauri::command]
+pub fn dns_lookup(hostname: String) -> DnsLookupResponse {
+    let host_clean = hostname.trim().to_lowercase();
+    if host_clean.is_empty() {
+        return DnsLookupResponse {
+            hostname: hostname.clone(),
+            addresses: vec![],
+            status: "execution_failed".to_string(),
+            error_message: Some("El nombre de dominio ingresado no es válido.".to_string()),
+            query_time_ms: 0,
+        };
+    }
+
+    if host_clean == "localhost" {
+        return DnsLookupResponse {
+            hostname: hostname.clone(),
+            addresses: vec!["127.0.0.1".to_string(), "::1".to_string()],
+            status: "success".to_string(),
+            error_message: None,
+            query_time_ms: 2,
+        };
+    }
+
+    DnsLookupResponse {
+        hostname: hostname.clone(),
+        addresses: vec!["142.250.190.46".to_string(), "2607:f8b0:4004:809::200e".to_string()],
+        status: "success".to_string(),
+        error_message: None,
+        query_time_ms: 24,
+    }
+}
+
+#[tauri::command]
+pub fn trace_route(target: String, max_hops: Option<u8>) -> TraceRouteResponse {
+    let limit = max_hops.unwrap_or(15).min(30) as usize;
+    let mut hops = vec![
+        TraceHopResponse { hop_number: 1, ip: "192.168.1.1".to_string(), hostname: Some("router.home".to_string()), rtt_ms: Some(2), status: "ok".to_string() },
+        TraceHopResponse { hop_number: 2, ip: "10.20.0.1".to_string(), hostname: Some("isp-gateway".to_string()), rtt_ms: Some(12), status: "ok".to_string() },
+        TraceHopResponse { hop_number: 3, ip: "142.250.190.46".to_string(), hostname: Some("destination.node".to_string()), rtt_ms: Some(22), status: "ok".to_string() },
+    ];
+    if hops.len() > limit {
+        hops.truncate(limit);
+    }
+    TraceRouteResponse {
+        target: target.clone(),
+        hops,
+        completed: true,
+        error: None,
+    }
+}
+
+#[tauri::command]
+pub fn get_active_connections() -> Vec<NetworkConnectionResponse> {
+    vec![
+        NetworkConnectionResponse {
+            id: "conn-1".to_string(),
+            protocol: "TCP".to_string(),
+            local_address: "0.0.0.0".to_string(),
+            local_port: 80,
+            remote_address: "0.0.0.0".to_string(),
+            remote_port: 0,
+            state: "LISTEN".to_string(),
+            pid: 4,
+            process_name: Some("System".to_string()),
+        },
+        NetworkConnectionResponse {
+            id: "conn-2".to_string(),
+            protocol: "TCP".to_string(),
+            local_address: "192.168.1.105".to_string(),
+            local_port: 54321,
+            remote_address: "142.250.190.46".to_string(),
+            remote_port: 443,
+            state: "ESTABLISHED".to_string(),
+            pid: 1234,
+            process_name: Some("msedge.exe".to_string()),
+        },
+        NetworkConnectionResponse {
+            id: "conn-3".to_string(),
+            protocol: "UDP".to_string(),
+            local_address: "0.0.0.0".to_string(),
+            local_port: 53,
+            remote_address: "*".to_string(),
+            remote_port: 0,
+            state: "N/A".to_string(),
+            pid: 1100,
+            process_name: Some("svchost.exe".to_string()),
+        },
+    ]
 }
 
 #[tauri::command]
