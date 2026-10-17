@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   Home,
+  Activity,
+  Terminal,
+  Monitor,
   Cpu,
   HardDrive,
-  Monitor,
-  Activity,
   Wifi,
   ShieldCheck,
   Wrench,
@@ -13,7 +14,6 @@ import {
   Star,
   Clock,
   Settings,
-  Terminal,
   LucideProps,
 } from 'lucide-react';
 import { CategoryId } from '../types';
@@ -28,10 +28,11 @@ interface SidebarProps {
 
 const ICON_MAP: Record<string, React.FC<LucideProps>> = {
   Home,
+  Activity,
+  Terminal,
+  Monitor,
   Cpu,
   HardDrive,
-  Monitor,
-  Activity,
   Wifi,
   ShieldCheck,
   Wrench,
@@ -65,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Terminal size={22} />
         </div>
         <span className="brand-title">TechKit</span>
-        <span className="brand-phase">Fase 5</span>
+        <span className="brand-phase">Pro</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -95,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
 
         {/* Categories */}
-        <div className="nav-section-title">Categorías de Herramientas</div>
+        <div className="nav-section-title">Suite de Herramientas</div>
         {mainCategories.map((cat) => {
           const isActive = activeCategory === cat.id;
           const toolCount = catalogService.getToolsByCategory(cat.id).length;

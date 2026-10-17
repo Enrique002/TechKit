@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { SystemSummary, CpuInfo, MemoryInfo, DiskVolume } from '../types';
+import { SystemSummary, CpuInfo, MemoryInfo, DiskVolume, GpuInfo, MotherboardBiosInfo } from '../types';
 
 export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0 || !isFinite(bytes) || isNaN(bytes)) return '0 B';
@@ -31,23 +31,28 @@ export function safePercentage(used: number, total: number): number {
   return Math.min(100, Math.max(0, parseFloat(pct.toFixed(1))));
 }
 
-// Fallback mock data for web browser environment or testing
 const MOCK_SUMMARY: SystemSummary = {
   hostname: 'WORKSTATION-WIN',
   username: 'TecnicoUsuario',
   osName: 'Microsoft Windows 11 Pro',
-  osVersion: '10.0.22631 Build 22631',
+  osVersion: '23H2 (Build 22631.3593)',
+  buildNumber: '22631.3593',
   architecture: 'x64 (AMD64)',
-  appVersion: '0.2.0 (Fase 2)',
+  appVersion: '1.0.0 Pro',
   uptimeSeconds: 14520,
+  activationStatus: 'Windows está activado con una licencia digital',
   lastUpdated: new Date().toLocaleTimeString(),
 };
 
 const MOCK_CPU: CpuInfo = {
   model: 'Intel(R) Core(TM) i7-12700K 12th Gen @ 3.60GHz',
+  vendor: 'GenuineIntel',
   physicalCores: 12,
   logicalCores: 20,
+  baseFrequencyGhz: 3.61,
+  currentFrequencyGhz: 4.20,
   architecture: 'x86_64',
+  instructionsSupported: ['MMX', 'SSE', 'SSE2', 'SSE3', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX', 'AVX2', 'FMA3', 'VT-x'],
   globalUsagePercentage: 18.5,
 };
 
@@ -56,7 +61,14 @@ const MOCK_MEMORY: MemoryInfo = {
   usedBytes: 13958643712,  // ~13 GB
   freeBytes: 20401094656,
   availableBytes: 20401094656,
+  committedBytes: 18253611008,
+  pagedBytes: 2147483648,
+  cachedBytes: 4294967296,
   usagePercentage: 40.6,
+  modules: [
+    { slot: 'DIMM 1', capacityBytes: 17179869184, speedMhz: 3200, type: 'DDR4' },
+    { slot: 'DIMM 3', capacityBytes: 17179869184, speedMhz: 3200, type: 'DDR4' },
+  ],
 };
 
 const MOCK_DISKS: DiskVolume[] = [
@@ -69,6 +81,12 @@ const MOCK_DISKS: DiskVolume[] = [
     usedBytes: 329574080512,
     usagePercentage: 64.3,
     isRemovable: false,
+    diskType: 'NVMe',
+    readSpeedMbps: 245.5,
+    writeSpeedMbps: 84.2,
+    smartHealth: 'Bueno (100%)',
+    temperatureC: 38,
+    powerOnHours: 2450,
   },
   {
     mountPoint: 'D:',
@@ -79,8 +97,35 @@ const MOCK_DISKS: DiskVolume[] = [
     usedBytes: 550081429227,
     usagePercentage: 55.0,
     isRemovable: false,
+    diskType: 'SSD',
+    readSpeedMbps: 12.0,
+    writeSpeedMbps: 4.5,
+    smartHealth: 'Bueno (98%)',
+    temperatureC: 34,
+    powerOnHours: 5100,
   },
 ];
+
+const MOCK_GPU: GpuInfo = {
+  model: 'NVIDIA GeForce RTX 3080 Ti',
+  vendor: 'NVIDIA Corporation',
+  dedicatedMemoryBytes: 12884901888, // 12 GB
+  sharedMemoryBytes: 17179869184,   // 16 GB
+  usagePercentage: 24.0,
+  temperatureC: 48,
+  powerDrawWatts: 115,
+  driverVersion: '551.86 (WHQL)',
+  displaysConnected: ['Display 1: 2560x1440 @ 144Hz (DP)', 'Display 2: 1920x1080 @ 60Hz (HDMI)'],
+};
+
+const MOCK_MOTHERBOARD: MotherboardBiosInfo = {
+  manufacturer: 'ASUSTeK COMPUTER INC.',
+  model: 'PRIME Z690-P D4',
+  biosVendor: 'American Megatrends Inc.',
+  biosVersion: '2204',
+  biosReleaseDate: '11/15/2023',
+  systemModel: 'System Product Name',
+};
 
 const isTauriEnv = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -96,9 +141,11 @@ export const systemService = {
           username: res.username || 'Usuario',
           osName: res.os_name || 'Windows',
           osVersion: res.os_version || 'N/A',
+          buildNumber: res.build_number || '22631.3593',
           architecture: res.architecture || 'x64',
-          appVersion: res.app_version || '0.2.0',
+          appVersion: res.app_version || '1.0.0 Pro',
           uptimeSeconds: res.uptime_seconds || 0,
+          activationStatus: res.activation_status || 'Activado (Licencia digital)',
           lastUpdated: new Date().toLocaleTimeString(),
         };
       } catch (err) {
@@ -117,9 +164,13 @@ export const systemService = {
         const res = await invoke<any>('get_cpu_info');
         return {
           model: res.model || 'Procesador x64',
+          vendor: res.vendor || 'Intel/AMD',
           physicalCores: res.physical_cores || 1,
           logicalCores: res.logical_cores || 1,
+          baseFrequencyGhz: res.base_frequency_ghz || 3.6,
+          currentFrequencyGhz: res.current_frequency_ghz || 3.6,
           architecture: res.architecture || 'x86_64',
+          instructionsSupported: res.instructions_supported || ['x86_64', 'AVX2'],
           globalUsagePercentage: safePercentage(res.global_usage_percentage, 100),
         };
       } catch (err) {
@@ -140,7 +191,11 @@ export const systemService = {
           usedBytes: used,
           freeBytes: res.free_bytes || 0,
           availableBytes: res.available_bytes || 0,
+          committedBytes: res.committed_bytes || total * 0.6,
+          pagedBytes: res.paged_bytes || 2147483648,
+          cachedBytes: res.cached_bytes || 4294967296,
           usagePercentage: safePercentage(used, total),
+          modules: res.modules || MOCK_MEMORY.modules,
         };
       } catch (err) {
         console.warn('Tauri invoke get_memory_info failed, using fallback:', err);
@@ -165,6 +220,12 @@ export const systemService = {
             usedBytes: used,
             usagePercentage: safePercentage(used, total),
             isRemovable: Boolean(d.is_removable),
+            diskType: d.disk_type || 'SSD',
+            readSpeedMbps: d.read_speed_mbps || 0,
+            writeSpeedMbps: d.write_speed_mbps || 0,
+            smartHealth: d.smart_health || 'Bueno (100%)',
+            temperatureC: d.temperature_c,
+            powerOnHours: d.power_on_hours,
           };
         });
       } catch (err) {
@@ -172,5 +233,47 @@ export const systemService = {
       }
     }
     return MOCK_DISKS;
+  },
+
+  async getGpuInfo(): Promise<GpuInfo> {
+    if (isTauriEnv()) {
+      try {
+        const res = await invoke<any>('get_gpu_info');
+        return {
+          model: res.model || 'Adaptador de pantalla básico',
+          vendor: res.vendor || 'Microsoft/NVIDIA/AMD/Intel',
+          dedicatedMemoryBytes: res.dedicated_memory_bytes || 0,
+          sharedMemoryBytes: res.shared_memory_bytes || 0,
+          usagePercentage: res.usage_percentage || 0,
+          temperatureC: res.temperature_c,
+          powerDrawWatts: res.power_draw_watts,
+          driverVersion: res.driver_version || 'WHQL',
+          displaysConnected: res.displays_connected || ['Pantalla principal'],
+          availableNote: res.available_note,
+        };
+      } catch (err) {
+        console.warn('Tauri invoke get_gpu_info failed, using fallback:', err);
+      }
+    }
+    return MOCK_GPU;
+  },
+
+  async getMotherboardInfo(): Promise<MotherboardBiosInfo> {
+    if (isTauriEnv()) {
+      try {
+        const res = await invoke<any>('get_motherboard_info');
+        return {
+          manufacturer: res.manufacturer || 'Fabricante del sistema',
+          model: res.model || 'Modelo de placa base',
+          biosVendor: res.bios_vendor || 'BIOS Vendor',
+          biosVersion: res.bios_version || '1.0.0',
+          biosReleaseDate: res.bios_release_date || 'N/A',
+          systemModel: res.system_model || 'System Model',
+        };
+      } catch (err) {
+        console.warn('Tauri invoke get_motherboard_info failed, using fallback:', err);
+      }
+    }
+    return MOCK_MOTHERBOARD;
   },
 };

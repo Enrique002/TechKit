@@ -16,7 +16,7 @@ export const CategoryPendingView: React.FC<CategoryPendingViewProps> = ({ catego
         Sección: {category.name}
       </h3>
       <p className="empty-description" style={{ maxWidth: '520px', margin: '8px 0 16px 0' }}>
-        El contenido y las herramientas nativas de diagnóstico para <strong>{category.name}</strong> están pendientes de desarrollo para las siguientes fases del proyecto.
+        Las utilidades y herramientas recomendadas para <strong>{category.name}</strong> se encuentran disponibles en el catálogo.
       </p>
       <div
         className="info-box"
@@ -28,10 +28,10 @@ export const CategoryPendingView: React.FC<CategoryPendingViewProps> = ({ catego
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '6px' }}>
-          <Clock size={16} /> Estado del desarrollo (Fase 5 Final)
+          <Clock size={16} /> Suite Técnica TechKit
         </div>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Esta categoría cuenta con su estructura preparada y enlaces oficiales seleccionados.
+          Esta categoría cuenta con su estructura de accesos y utilidades oficiales verificadas.
         </p>
       </div>
     </div>

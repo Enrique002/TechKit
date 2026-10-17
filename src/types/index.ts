@@ -1,12 +1,15 @@
 export type CategoryId =
   | 'home'
+  | 'performance'
+  | 'processes'
+  | 'specs'
   | 'hardware'
   | 'disks'
   | 'os'
-  | 'processes'
   | 'network'
   | 'security'
   | 'maintenance'
+  | 'tools_catalog'
   | 'downloadable'
   | 'guides'
   | 'favorites'
@@ -34,6 +37,23 @@ export type ImplementationStatus =
   | 'requires_permissions'
   | 'unverified';
 
+export interface ExternalToolItem {
+  id: string;
+  name: string;
+  category: CategoryId;
+  categoryDisplayName: string;
+  shortDescription: string;
+  mainFeatures: string[];
+  solvesProblems: string[];
+  licenseType: string;
+  windowsCompatibility: string;
+  requiresAdmin: boolean;
+  officialUrl: string;
+  installationStatus: 'installed' | 'not_detected' | 'unknown';
+  executablePath?: string;
+  warnings?: string;
+}
+
 export interface Tool {
   id: string;
   name: string;
@@ -46,12 +66,14 @@ export interface Tool {
   officialUrl?: string;
   keywords: string[];
   instructions?: string;
+  externalDetails?: ExternalToolItem;
 }
 
 export interface UserSettings {
   theme: 'dark' | 'light';
   compactMode: boolean;
   showPendingTools: boolean;
+  refreshIntervalSec: number;
 }
 
 export interface RecentItem {
@@ -64,17 +86,23 @@ export interface SystemSummary {
   username: string;
   osName: string;
   osVersion: string;
+  buildNumber: string;
   architecture: string;
   appVersion: string;
   uptimeSeconds: number;
+  activationStatus: string;
   lastUpdated: string;
 }
 
 export interface CpuInfo {
   model: string;
+  vendor: string;
   physicalCores: number;
   logicalCores: number;
+  baseFrequencyGhz: number;
+  currentFrequencyGhz: number;
   architecture: string;
+  instructionsSupported: string[];
   globalUsagePercentage: number;
 }
 
@@ -83,7 +111,16 @@ export interface MemoryInfo {
   usedBytes: number;
   freeBytes: number;
   availableBytes: number;
+  committedBytes: number;
+  pagedBytes: number;
+  cachedBytes: number;
   usagePercentage: number;
+  modules: Array<{
+    slot: string;
+    capacityBytes: number;
+    speedMhz: number;
+    type: string;
+  }>;
 }
 
 export interface DiskVolume {
@@ -95,19 +132,63 @@ export interface DiskVolume {
   usedBytes: number;
   usagePercentage: number;
   isRemovable: boolean;
+  diskType: 'SSD' | 'HDD' | 'NVMe' | 'Desconocido';
+  readSpeedMbps: number;
+  writeSpeedMbps: number;
+  smartHealth: string;
+  temperatureC?: number;
+  powerOnHours?: number;
 }
 
-// Phase 3 Data Models
+export interface GpuInfo {
+  model: string;
+  vendor: string;
+  dedicatedMemoryBytes: number;
+  sharedMemoryBytes: number;
+  usagePercentage: number;
+  temperatureC?: number;
+  powerDrawWatts?: number;
+  driverVersion: string;
+  displaysConnected: string[];
+  availableNote?: string;
+}
+
+export interface NetworkPerformanceInfo {
+  uploadBytesPerSec: number;
+  downloadBytesPerSec: number;
+  totalBytesSent: number;
+  totalBytesReceived: number;
+  activeInterfacesCount: number;
+  connectionStatus: string;
+}
+
+export interface PerformanceSnapshot {
+  timestamp: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  diskUsage: number;
+  networkUploadBps: number;
+  networkDownloadBps: number;
+  gpuUsage: number;
+}
 
 export interface ProcessInfo {
   pid: number;
+  ppid?: number;
   name: string;
   cpuUsagePercentage: number;
   memoryBytes: number;
+  virtualMemoryBytes?: number;
+  readBytesPerSec?: number;
+  writeBytesPerSec?: number;
+  threadsCount: number;
   exePath: string;
   user: string;
   status: string;
   isCritical: boolean;
+  startTime?: string;
+  publisher?: string;
+  isElevated?: boolean;
 }
 
 export interface ProcessKillResult {
@@ -191,4 +272,13 @@ export interface NetworkConnectionInfo {
   state: 'LISTEN' | 'ESTABLISHED' | 'CLOSE_WAIT' | 'TIME_WAIT' | 'SYN_SENT' | 'SYN_RECV' | 'FIN_WAIT1' | 'FIN_WAIT2' | 'CLOSING' | 'LAST_ACK' | 'UNKNOWN' | 'N/A';
   pid: number;
   processName?: string;
+}
+
+export interface MotherboardBiosInfo {
+  manufacturer: string;
+  model: string;
+  biosVendor: string;
+  biosVersion: string;
+  biosReleaseDate: string;
+  systemModel: string;
 }

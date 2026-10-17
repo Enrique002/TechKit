@@ -237,7 +237,7 @@ pub fn get_system_summary() -> SystemSummaryResponse {
         os_name,
         os_version,
         architecture,
-        app_version: "0.3.0 (Fase 3)".to_string(),
+        app_version: "1.0.0 Pro".to_string(),
         uptime_seconds,
         last_updated: "Consulta realizada".to_string(),
     }

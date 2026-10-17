@@ -4,13 +4,15 @@ import { catalogService } from '../services/catalogService';
 import { ToolCard } from '../components/ToolCard';
 import { CategoryPendingView } from '../components/CategoryPendingView';
 import { EmptyState } from '../components/EmptyState';
-import { SystemSummaryView } from '../components/views/SystemSummaryView';
 import { CpuView } from '../components/views/CpuView';
 import { MemoryView } from '../components/views/MemoryView';
 import { StorageView } from '../components/views/StorageView';
 import { ProcessesView } from '../components/views/ProcessesView';
 import { ServicesView } from '../components/views/ServicesView';
 import { NetworkView } from '../components/views/NetworkView';
+import { PerformanceView } from '../components/views/PerformanceView';
+import { SystemSpecsView } from '../components/views/SystemSpecsView';
+import { ExternalToolsView } from '../components/views/ExternalToolsView';
 
 interface CategoryPageProps {
   categoryId: CategoryId;
@@ -60,8 +62,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
 
   const renderCategorySpecialView = () => {
     switch (categoryId) {
+      case 'performance':
+        return <PerformanceView />;
+      case 'specs':
       case 'os':
-        return <SystemSummaryView />;
+        return <SystemSpecsView />;
       case 'hardware':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -88,6 +93,8 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
             initialPidFilter={targetPidForNetwork}
           />
         );
+      case 'tools_catalog':
+        return <ExternalToolsView onSelectTool={onSelectTool} />;
       default:
         return null;
     }

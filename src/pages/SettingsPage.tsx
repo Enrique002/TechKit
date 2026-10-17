@@ -66,10 +66,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className="info-row" style={{ alignItems: 'center' }}>
             <div>
               <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                Mostrar herramientas pendientes de implementación
+                Mostrar catálogo de herramientas adicionales
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Incluye en el catálogo las utilidades que se integrarán en fases posteriores.
+                Incluye en la lista utilidades sugeridas y enlaces oficiales de descarga.
               </div>
             </div>
             <input
@@ -89,7 +89,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="info-box">
           <div className="info-row">
             <span className="info-label">Versión de TechKit</span>
-            <span className="info-value">1.0.0 (Fase 5 Final)</span>
+            <span className="info-value">1.0.0 Pro</span>
           </div>
           <div className="info-row">
             <span className="info-label">Entorno Frontend</span>
