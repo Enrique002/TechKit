@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Star, ExternalLink, Clock } from 'lucide-react';
 import { Tool } from '../types';
+import { urlService } from '../services/urlService';
 
 interface ToolDetailModalProps {
   tool: Tool | null;
@@ -47,9 +48,15 @@ export const ToolDetailModal: React.FC<ToolDetailModalProps> = ({
     }
   };
 
-  const handleExternalClick = () => {
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const handleExternalClick = async () => {
     if (tool.officialUrl) {
-      window.open(tool.officialUrl, '_blank', 'noopener,noreferrer');
+      setModalError(null);
+      const res = await urlService.openUrl(tool.officialUrl);
+      if (!res.success && res.error) {
+        setModalError(res.error);
+      }
     }
   };
 
@@ -71,6 +78,11 @@ export const ToolDetailModal: React.FC<ToolDetailModalProps> = ({
         </div>
 
         <div className="modal-body">
+          {modalError && (
+            <div className="info-box" style={{ borderColor: '#ff4d4f', color: '#ff4d4f', marginBottom: '12px' }}>
+              {modalError}
+            </div>
+          )}
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
             {tool.description}
           </p>

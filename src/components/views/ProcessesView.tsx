@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProcessInfo } from '../../types';
 import { processService } from '../../services/processService';
+import { urlService } from '../../services/urlService';
 import { formatBytes } from '../../services/systemService';
 import {
   RefreshCw,
@@ -165,9 +166,13 @@ export const ProcessesView: React.FC<ProcessesViewProps> = ({
     document.body.removeChild(link);
   };
 
-  const handleSearchWebProcess = (processName: string) => {
+  const handleSearchWebProcess = async (processName: string) => {
     const query = encodeURIComponent(`que es el proceso ${processName} windows`);
-    window.open(`https://www.google.com/search?q=${query}`, '_blank', 'noopener,noreferrer');
+    const searchUrl = `https://www.google.com/search?q=${query}`;
+    const res = await urlService.openUrl(searchUrl);
+    if (!res.success && res.error) {
+      setActionMessage({ type: 'error', text: res.error });
+    }
   };
 
   const filteredProcesses = processes

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, ExternalLink, Shield, Search } from 'lucide-react';
 import { catalogService } from '../../services/catalogService';
+import { urlService } from '../../services/urlService';
 import { Tool, CategoryId } from '../../types';
 
 interface ExternalToolsViewProps {
@@ -14,6 +15,16 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
 }) => {
   const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>(selectedCategoryFilter);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  const handleOpenUrl = async (url?: string) => {
+    if (!url) return;
+    setLinkError(null);
+    const res = await urlService.openUrl(url);
+    if (!res.success && res.error) {
+      setLinkError(res.error);
+    }
+  };
 
   const allExternal = catalogService.getExternalTools();
 
@@ -32,6 +43,13 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {linkError && (
+        <div className="info-box" style={{ borderColor: '#ff4d4f', color: '#ff4d4f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{linkError}</span>
+          <button className="icon-btn" onClick={() => setLinkError(null)} style={{ color: '#ff4d4f' }}>✕</button>
+        </div>
+      )}
+
       {/* Banner */}
       <div className="hero-card" style={{ background: 'var(--bg-secondary)' }}>
         <div>
@@ -158,7 +176,7 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
                   style={{ fontSize: '11px', padding: '4px 10px' }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (tool.officialUrl) window.open(tool.officialUrl, '_blank', 'noopener,noreferrer');
+                    handleOpenUrl(tool.officialUrl);
                   }}
                 >
                   <ExternalLink size={12} /> Sitio Oficial

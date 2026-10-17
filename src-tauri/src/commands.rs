@@ -1,6 +1,33 @@
 use serde::Serialize;
 use sysinfo::{CpuRefreshKind, Disks, MemoryRefreshKind, ProcessRefreshKind, RefreshKind, System};
 
+#[cfg(target_os = "windows")]
+use std::process::Command;
+
+#[derive(Serialize, Clone)]
+pub struct GpuInfoResponse {
+    pub model: String,
+    pub vendor: String,
+    pub dedicated_memory_bytes: u64,
+    pub shared_memory_bytes: u64,
+    pub usage_percentage: f32,
+    pub temperature_c: Option<f32>,
+    pub power_draw_watts: Option<f32>,
+    pub driver_version: String,
+    pub displays_connected: Vec<String>,
+    pub available_note: Option<String>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct MotherboardBiosResponse {
+    pub manufacturer: String,
+    pub model: String,
+    pub bios_vendor: String,
+    pub bios_version: String,
+    pub bios_release_date: String,
+    pub system_model: String,
+}
+
 #[derive(Serialize)]
 pub struct SystemSummaryResponse {
     pub hostname: String,
@@ -425,6 +452,72 @@ pub fn kill_process(pid: u32) -> ProcessKillResponse {
 }
 
 #[tauri::command]
+pub fn kill_process_tree(pid: u32) -> ProcessKillResponse {
+    if pid <= 4 {
+        return ProcessKillResponse {
+            success: false,
+            message: format!("El proceso con PID {} es un proceso núcleo de Windows y no puede ser finalizado.", pid),
+            pid,
+        };
+    }
+
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+    );
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let target_pid = sysinfo::Pid::from_u32(pid);
+
+    if let Some(process) = sys.process(target_pid) {
+        let name = process.name().to_string_lossy().to_string();
+        if is_critical_process_name(&name) {
+            return ProcessKillResponse {
+                success: false,
+                message: format!("El proceso '{}' (PID {}) está marcado como crítico del sistema por seguridad.", name, pid),
+                pid,
+            };
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            let output = Command::new("taskkill")
+                .args(&["/PID", &pid.to_string(), "/T", "/F"])
+                .output();
+
+            if let Ok(out) = output {
+                if out.status.success() {
+                    return ProcessKillResponse {
+                        success: true,
+                        message: format!("Árbol de procesos de '{}' (PID {}) finalizado correctamente.", name, pid),
+                        pid,
+                    };
+                }
+            }
+        }
+
+        if process.kill() {
+            ProcessKillResponse {
+                success: true,
+                message: format!("Árbol de procesos de '{}' (PID {}) finalizado correctamente.", name, pid),
+                pid,
+            }
+        } else {
+            ProcessKillResponse {
+                success: false,
+                message: format!("No se pudo finalizar el árbol de procesos de '{}' (PID {}). Puede requerir permisos elevados de Administrador.", name, pid),
+                pid,
+            }
+        }
+    } else {
+        ProcessKillResponse {
+            success: false,
+            message: format!("El proceso con PID {} ya no existe o ha finalizado previamente.", pid),
+            pid,
+        }
+    }
+}
+
+#[tauri::command]
 pub fn get_windows_services() -> Vec<WindowsServiceResponse> {
     vec![
         WindowsServiceResponse {
@@ -757,5 +850,164 @@ pub fn clean_temp_files(category_ids: Vec<String>) -> CleanResponse {
         cleaned_bytes: 1700420700,
         items_removed: 605,
         details: format!("Se han limpiado con éxito {} categorías seleccionadas.", category_ids.len()),
+    }
+}
+
+#[derive(serde::Deserialize, Debug)]
+#[allow(non_snake_case, dead_code)]
+struct Win32VideoControllerItem {
+    Name: Option<String>,
+    Caption: Option<String>,
+    AdapterRAM: Option<u64>,
+    DriverVersion: Option<String>,
+    PNPDeviceID: Option<String>,
+    VideoProcessor: Option<String>,
+    Status: Option<String>,
+}
+
+#[tauri::command]
+pub fn get_gpu_info() -> GpuInfoResponse {
+    #[cfg(target_os = "windows")]
+    {
+        let ps_script = "Get-CimInstance Win32_VideoController | Select-Object Name, Caption, AdapterRAM, DriverVersion, PNPDeviceID, VideoProcessor, Status | ConvertTo-Json";
+        let output = Command::new("powershell")
+            .args(&["-NoProfile", "-NonInteractive", "-Command", ps_script])
+            .output();
+
+        if let Ok(out) = output {
+            if out.status.success() {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                let parsed_items: Vec<Win32VideoControllerItem> = if let Ok(items) = serde_json::from_str::<Vec<Win32VideoControllerItem>>(&stdout) {
+                    items
+                } else if let Ok(single) = serde_json::from_str::<Win32VideoControllerItem>(&stdout) {
+                    vec![single]
+                } else {
+                    vec![]
+                };
+
+                if !parsed_items.is_empty() {
+                    let mut dedicated_gpus = Vec::new();
+                    let mut integrated_gpus = Vec::new();
+
+                    for item in &parsed_items {
+                        let name = item.Name.clone().or_else(|| item.Caption.clone()).unwrap_or_else(|| "Adaptador de pantalla genérico".to_string());
+                        let name_lower = name.to_lowercase();
+                        if name_lower.contains("basic render") || name_lower.contains("pantalla básico") {
+                            continue;
+                        }
+
+                        let pnp = item.PNPDeviceID.as_deref().unwrap_or("");
+                        let is_dedicated = name_lower.contains("nvidia") || name_lower.contains("geforce") || name_lower.contains("rtx") || name_lower.contains("gtx")
+                            || name_lower.contains("radeon rx") || pnp.contains("VEN_10DE") || pnp.contains("VEN_1002")
+                            || (item.AdapterRAM.unwrap_or(0) >= 1_073_741_824 && !name_lower.contains("intel"));
+
+                        if is_dedicated {
+                            dedicated_gpus.push((item, name));
+                        } else {
+                            integrated_gpus.push((item, name));
+                        }
+                    }
+
+                    let primary_gpu_tuple = dedicated_gpus.first().or_else(|| integrated_gpus.first());
+
+                    if let Some((gpu_item, raw_name)) = primary_gpu_tuple {
+                        let pnp = gpu_item.PNPDeviceID.as_deref().unwrap_or("");
+                        let name_lower = raw_name.to_lowercase();
+
+                        let vendor = if name_lower.contains("nvidia") || pnp.contains("VEN_10DE") {
+                            "NVIDIA Corporation".to_string()
+                        } else if name_lower.contains("amd") || name_lower.contains("radeon") || pnp.contains("VEN_1002") {
+                            "Advanced Micro Devices, Inc.".to_string()
+                        } else if name_lower.contains("intel") || pnp.contains("VEN_8086") {
+                            "Intel Corporation".to_string()
+                        } else {
+                            "Fabricante no disponible".to_string()
+                        };
+
+                        let vram = gpu_item.AdapterRAM.unwrap_or(0);
+                        let driver = gpu_item.DriverVersion.clone().unwrap_or_else(|| "No disponible".to_string());
+
+                        let note = if parsed_items.len() > 1 {
+                            Some(format!("Detectados {} adaptadores gráficos en el sistema.", parsed_items.len()))
+                        } else {
+                            Some("Adaptador gráfico detectado vía Win32_VideoController.".to_string())
+                        };
+
+                        return GpuInfoResponse {
+                            model: raw_name.clone(),
+                            vendor,
+                            dedicated_memory_bytes: vram,
+                            shared_memory_bytes: 0,
+                            usage_percentage: 0.0,
+                            temperature_c: None,
+                            power_draw_watts: None,
+                            driver_version: driver,
+                            displays_connected: vec!["Pantalla principal detectada por Windows".to_string()],
+                            available_note: note,
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    GpuInfoResponse {
+        model: "No disponible".to_string(),
+        vendor: "No disponible".to_string(),
+        dedicated_memory_bytes: 0,
+        shared_memory_bytes: 0,
+        usage_percentage: 0.0,
+        temperature_c: None,
+        power_draw_watts: None,
+        driver_version: "No disponible".to_string(),
+        displays_connected: vec!["No disponible".to_string()],
+        available_note: Some("Información de GPU no disponible en este entorno o sin respuesta de WMI.".to_string()),
+    }
+}
+
+#[derive(serde::Deserialize)]
+#[allow(non_snake_case, dead_code)]
+struct BoardBiosItem {
+    BoardManufacturer: Option<String>,
+    BoardModel: Option<String>,
+    BiosVendor: Option<String>,
+    BiosVersion: Option<String>,
+    BiosDate: Option<String>,
+    SystemModel: Option<String>,
+}
+
+#[tauri::command]
+pub fn get_motherboard_info() -> MotherboardBiosResponse {
+    #[cfg(target_os = "windows")]
+    {
+        let ps_script = "$board = Get-CimInstance Win32_BaseBoard | Select-Object -First 1 Manufacturer, Product; $bios = Get-CimInstance Win32_BIOS | Select-Object -First 1 Manufacturer, SMBIOSBIOSVersion, ReleaseDate; $sys = Get-CimInstance Win32_ComputerSystem | Select-Object -First 1 Model; [PSCustomObject]@{ BoardManufacturer = $board.Manufacturer; BoardModel = $board.Product; BiosVendor = $bios.Manufacturer; BiosVersion = $bios.SMBIOSBIOSVersion; BiosDate = $bios.ReleaseDate; SystemModel = $sys.Model } | ConvertTo-Json";
+        let output = Command::new("powershell")
+            .args(&["-NoProfile", "-NonInteractive", "-Command", ps_script])
+            .output();
+
+        if let Ok(out) = output {
+            if out.status.success() {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                if let Ok(item) = serde_json::from_str::<BoardBiosItem>(&stdout) {
+                    return MotherboardBiosResponse {
+                        manufacturer: item.BoardManufacturer.unwrap_or_else(|| "No disponible".to_string()),
+                        model: item.BoardModel.unwrap_or_else(|| "No disponible".to_string()),
+                        bios_vendor: item.BiosVendor.unwrap_or_else(|| "No disponible".to_string()),
+                        bios_version: item.BiosVersion.unwrap_or_else(|| "No disponible".to_string()),
+                        bios_release_date: item.BiosDate.unwrap_or_else(|| "No disponible".to_string()),
+                        system_model: item.SystemModel.unwrap_or_else(|| "No disponible".to_string()),
+                    };
+                }
+            }
+        }
+    }
+
+    MotherboardBiosResponse {
+        manufacturer: "No disponible".to_string(),
+        model: "No disponible".to_string(),
+        bios_vendor: "No disponible".to_string(),
+        bios_version: "No disponible".to_string(),
+        bios_release_date: "No disponible".to_string(),
+        system_model: "No disponible".to_string(),
     }
 }

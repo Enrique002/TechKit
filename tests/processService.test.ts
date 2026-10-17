@@ -30,4 +30,19 @@ describe('processService - Fase 3', () => {
     expect(res.success).toBe(true);
     expect(res.pid).toBe(1234);
   });
+
+  it('impide la finalización del árbol de procesos de un proceso crítico (PID <= 4)', async () => {
+    const resPid0 = await processService.killProcessTree(0);
+    expect(resPid0.success).toBe(false);
+
+    const resPid4 = await processService.killProcessTree(4);
+    expect(resPid4.success).toBe(false);
+  });
+
+  it('permite solicitar la finalización del árbol de un proceso no crítico', async () => {
+    const res = await processService.killProcessTree(1234);
+    expect(res.success).toBe(true);
+    expect(res.pid).toBe(1234);
+    expect(res.message).toContain('Árbol de procesos');
+  });
 });
