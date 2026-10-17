@@ -47,22 +47,40 @@
 }
 
 [data-theme='light'] {
-  --bg-primary: #f5f7fa;
+  --bg-primary: #f1f5f9;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #e4e8f0;
+  --bg-tertiary: #e2e8f0;
   --bg-card: #ffffff;
-  --bg-card-hover: #f0f3f8;
+  --bg-card-hover: #f8fafc;
 
-  --border-color: #d9e1ec;
-  --border-highlight: #bcc8d8;
+  --border-color: #cbd5e1;
+  --border-highlight: #94a3b8;
 
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
 
-  --accent-color: #009975;
-  --accent-hover: #007a5e;
-  --accent-light: rgba(0, 153, 117, 0.12);
+  --accent-color: #008767;
+  --accent-hover: #006850;
+  --accent-light: rgba(0, 135, 103, 0.12);
+
+  --badge-native-bg: rgba(0, 135, 103, 0.12);
+  --badge-native-fg: #007358;
+
+  --badge-builtin-bg: rgba(2, 132, 199, 0.12);
+  --badge-builtin-fg: #0369a1;
+
+  --badge-external-bg: rgba(217, 119, 6, 0.12);
+  --badge-external-fg: #b45309;
+
+  --badge-guide-bg: rgba(124, 58, 237, 0.12);
+  --badge-guide-fg: #6d28d9;
+
+  --badge-available-bg: rgba(22, 163, 74, 0.12);
+  --badge-available-fg: #15803d;
+
+  --badge-pending-bg: rgba(100, 116, 139, 0.12);
+  --badge-pending-fg: #475569;
 }
 
 * {

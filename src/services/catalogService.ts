@@ -1,66 +1,73 @@
-import { INITIAL_TOOLS, CATEGORIES } from '../data/toolsData';
-import { Tool, CategoryId, CategoryInfo, ToolType } from '../types';
-
-export interface SearchFilters {
-  query?: string;
-  category?: CategoryId;
-  type?: ToolType;
-}
+import { CategoryId, CategoryInfo, Tool } from '../types';
+import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
 export const catalogService = {
-  getAllTools(): Tool[] {
-    return INITIAL_TOOLS;
-  },
-
-  getToolById(id: string): Tool | undefined {
-    return INITIAL_TOOLS.find((tool) => tool.id === id);
-  },
-
-  getToolsByCategory(categoryId: CategoryId): Tool[] {
-    return INITIAL_TOOLS.filter((tool) => tool.category === categoryId);
-  },
-
   getCategories(): CategoryInfo[] {
     return CATEGORIES;
   },
 
   getCategoryById(id: CategoryId): CategoryInfo | undefined {
-    return CATEGORIES.find((cat) => cat.id === id);
+    return CATEGORIES.find((c) => c.id === id);
   },
 
-  searchTools(filters: SearchFilters): Tool[] {
-    let results = INITIAL_TOOLS;
+  getToolById(id: string): Tool | undefined {
+    return this.getAllTools().find((t) => t.id === id);
+  },
 
-    if (filters.category) {
-      results = results.filter((tool) => tool.category === filters.category);
+  getAllTools(): Tool[] {
+    const nativeTools = INITIAL_TOOLS;
+    const externalTools: Tool[] = EXTERNAL_TOOLS_CATALOG.map((ext) => ({
+      id: ext.id,
+      name: ext.name,
+      description: ext.shortDescription,
+      category: ext.category,
+      type: 'external_app',
+      status: ext.installationStatus === 'installed' ? 'available' : 'requires_download',
+      compatibility: ext.windowsCompatibility,
+      permissions: ext.requiresAdmin ? 'Administrador requerido' : 'Usuario estándar',
+      officialUrl: ext.officialUrl,
+      keywords: [ext.name, ext.categoryDisplayName, ext.licenseType, ...ext.mainFeatures, ...ext.solvesProblems],
+      instructions: `Tipo de Licencia: ${ext.licenseType}\nFunciones Principales: ${ext.mainFeatures.join(', ')}\nProblemas que resuelve: ${ext.solvesProblems.join(', ')}\n${ext.warnings ? `\nAdvertencia: ${ext.warnings}` : ''}`,
+      externalDetails: ext,
+    }));
+
+    return [...nativeTools, ...externalTools];
+  },
+
+  getExternalTools(): Tool[] {
+    return this.getAllTools().filter((t) => t.type === 'external_app' && Boolean(t.externalDetails));
+  },
+
+  getExternalToolsByCategory(category: CategoryId): Tool[] {
+    return this.getExternalTools().filter((t) => t.category === category);
+  },
+
+  getToolsByCategory(category: CategoryId): Tool[] {
+    return this.getAllTools().filter((t) => t.category === category);
+  },
+
+  searchTools(options: { query?: string; category?: CategoryId; type?: string }): Tool[] {
+    let tools = this.getAllTools();
+
+    if (options.category) {
+      tools = tools.filter((t) => t.category === options.category);
     }
 
-    if (filters.type) {
-      results = results.filter((tool) => tool.type === filters.type);
+    if (options.type) {
+      tools = tools.filter((t) => t.type === options.type);
     }
 
-    if (filters.query && filters.query.trim().length > 0) {
-      const q = filters.query.trim().toLowerCase();
-
-      results = results.filter((tool) => {
-        const nameMatch = tool.name.toLowerCase().includes(q);
-        const descMatch = tool.description.toLowerCase().includes(q);
-        const categoryMatch = tool.category.toLowerCase().includes(q);
-        const typeMatch = tool.type.toLowerCase().includes(q);
-        const keywordMatch = tool.keywords.some((kw) =>
-          kw.toLowerCase().includes(q)
-        );
-
-        return (
-          nameMatch ||
-          descMatch ||
-          categoryMatch ||
-          typeMatch ||
-          keywordMatch
-        );
+    if (options.query && options.query.trim().length > 0) {
+      const q = options.query.toLowerCase().trim();
+      tools = tools.filter((t) => {
+        const inName = t.name.toLowerCase().includes(q);
+        const inDesc = t.description.toLowerCase().includes(q);
+        const inKeywords = t.keywords.some((k) => k.toLowerCase().includes(q));
+        const inInst = t.instructions ? t.instructions.toLowerCase().includes(q) : false;
+        return inName || inDesc || inKeywords || inInst;
       });
     }
 
-    return results;
+    return tools;
   },
 };

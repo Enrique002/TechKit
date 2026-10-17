@@ -37,7 +37,7 @@ export const ToolDetailModal: React.FC<ToolDetailModalProps> = ({
       case 'available':
         return 'Disponible en esta versión';
       case 'pending':
-        return 'Pendiente de implementación (Fase futura)';
+        return 'Herramienta en ampliación';
       case 'requires_download':
         return 'Requiere descarga externa desde sitio oficial';
       case 'requires_permissions':
@@ -110,10 +110,10 @@ export const ToolDetailModal: React.FC<ToolDetailModalProps> = ({
               <Clock size={18} style={{ color: '#faad14', flexShrink: 0, marginTop: '2px' }} />
               <div>
                 <strong style={{ color: '#faad14', display: 'block', marginBottom: '2px' }}>
-                  Funcionalidad en desarrollo (Fase futura)
+                  Herramienta en catálogo extendido
                 </strong>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Las funciones de ejecución para esta categoría se integrarán en las siguientes fases del desarrollo.
+                  Esta función dispone de ficha técnica y enlace oficial en nuestro catálogo de recursos recomendados.
                 </p>
               </div>
             </div>

@@ -35,7 +35,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       case 'available':
         return <span className="status-badge status-available">Disponible</span>;
       case 'pending':
-        return <span className="status-badge status-pending">Pendiente Fase 3+</span>;
+        return <span className="status-badge status-pending">Próximamente</span>;
       case 'requires_download':
         return <span className="status-badge status-pending">Descarga Externa</span>;
       case 'requires_permissions':
