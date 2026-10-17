@@ -1,18 +1,15 @@
 # TechKit
 
-**Estado: en desarrollo. Fase 2 de 5.**
+**Estado: en desarrollo. Fase 4 de 5.**
 
 TechKit es una aplicación de escritorio diseñada para técnicos informáticos y administradores de sistemas que necesitan reunir en un único panel de trabajo herramientas de diagnóstico, mantenimiento, utilidades integradas de Windows, programas externos recomendados y guías técnicas de resolución de incidencias.
 
 ---
 
-## 🚀 Objetivo del Proyecto
+## 🚀 Criterios y Estado del Proyecto
 
-El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
-- Un **buscador global** de herramientas, comandos y palabras clave habituales.
-- Una **navegación estructurada** por categorías técnicas (Hardware, Discos, Sistema Operativo, Procesos, Redes, Seguridad, Mantenimiento, Herramientas Descargables y Guías).
-- Un **sistema de favoritos** e **historial reciente** persistente.
-- **Consultas reales del sistema operativo** (añadidas en la Fase 2): información del equipo, especificaciones y uso dinámico del procesador (CPU), memoria RAM física (utilizada/disponible) y análisis de volúmenes de discos/unidades con espacio libre real.
+- **Estado Actual:** TechKit en desarrollo, **Fase 4 de 5**, preparado para la fase 5 de integración, pruebas finales y preparación de la distribución.
+- **Idioma del proyecto:** Todo el contenido visible para el usuario, mensajes y documentación se encuentran íntegramente en **español**.
 
 ---
 
@@ -21,103 +18,95 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 - **React 19**: Biblioteca para la construcción de la interfaz gráfica interactiva.
 - **TypeScript 5**: Tipado estático para garantizar solidez en los modelos de datos y servicios.
 - **Vite 6**: Herramienta de compilación rápida y servidor de desarrollo.
-- **Tauri 2 / Rust**: Motor de escritorio nativo con integración de comandos en Rust utilizando la crate `sysinfo` (`src-tauri/`).
+- **Tauri 2 / Rust**: Motor de escritorio nativo con integración de comandos en Rust en `src-tauri/`.
 - **Lucide React**: Conjunto de iconos vectoriales modernos y consistentes.
 - **Vitest & Testing Library**: Entorno de pruebas unitarias e integración de componentes.
 
 ---
 
-## 💻 Funcionalidades Implementadas (Fase 2)
+## 💻 Funcionalidades Implementadas (Fase 4)
 
-1. **Resumen del Equipo y Windows**:
-   - Nombre del equipo (Hostname).
-   - Usuario actual del sistema.
-   - Edición y versión exacta de Windows.
-   - Arquitectura del sistema (x64 / ARM64 / x86).
-   - Tiempo de actividad del sistema (Uptime) formateado.
-   - Fecha y hora de la consulta con botón de actualización manual.
+1. **Análisis de Archivos y Diagnóstico de Tipos**:
+   - Selección de archivos mediante el selector de archivos local.
+   - Consulta de nombre, ruta completa, extensión, tamaño exacto en bytes, fechas de modificación y estado de acceso.
+   - Distinción entre la extensión declarada y el tipo de archivo (MIME) identificado mediante su contenido real.
+   - Advertencias de seguridad explícitas indicando que una extensión no garantiza que un archivo sea seguro.
 
-2. **Procesador (CPU)**:
-   - Modelo exacto del procesador.
-   - Conteo de núcleos físicos y procesadores lógicos (hilos).
-   - Porcentaje de utilización global calculado mediante mediciones reales del sistema.
-   - Opción de monitoreo en tiempo real con frecuencia de actualización periódica segura.
+2. **Cálculo e Integridad de Hashes**:
+   - Cálculo de sumas de comprobación **SHA-256**, **SHA-512** y **MD5** sobre el contenido real del archivo.
+   - Identificación expresa de MD5 como algoritmo antiguo no recomendado para garantizar seguridad criptográfica.
+   - Acciones para copiar hashes al portapapeles.
+   - Comparación del hash calculado del archivo con un hash esperado introducido por el usuario (normalizando espacios y mayúsculas/minúsculas).
 
-3. **Memoria RAM**:
-   - Memoria física total, utilizada y disponible.
-   - Porcentaje de utilización real con barra de estado dinámica e indicadores de contraste.
-   - Formato automático en GB/MB.
+3. **Comparación Directa de Archivos**:
+   - Selección de dos archivos para comparación.
+   - Evaluación de coincidencia de tamaños en bytes y cálculo de huellas digitales SHA-256.
+   - Comunicación clara e inequívoca indicando si los archivos tienen contenido binario idéntico.
 
-4. **Unidades y Almacenamiento**:
-   - Detección de todos los volúmenes montados (C:, D:, etc.).
-   - Identificación de etiquetas de volumen, sistema de archivos (NTFS, FAT32) y unidades extraíbles.
-   - Cálculo de capacidad total, espacio utilizado y espacio libre.
-   - Barra visual de ocupación de disco por cada unidad.
+4. **Metadatos Básicos**:
+   - Inspección de cabeceras de metadatos, versiones de archivo, versiones de producto y fabricante sin ejecutar el archivo.
+   - Distinción entre información ausente y formatos no ejecutables/compatibles.
 
-5. **Buscador Global y Persistencia**:
-   - Búsqueda por palabras clave en español como `procesador`, `cpu`, `memoria`, `RAM`, `almacenamiento`, `disco`, `espacio libre`, `unidades`, `sistema operativo`, etc.
-   - Favoritos e historial de herramientas consultadas sincronizados de forma persistente en almacenamiento local.
+5. **Verificación de Firmas Digitales**:
+   - Comprobación de cabeceras PKCS#7 y firmas digitales en ejecutables y librerías (`.exe`, `.dll`).
+   - Muestra el estado de la firma (*Válida*, *Inválida*, *Sin firma*, *Desconocido*), el nombre del firmante y la entidad emisora.
+   - Aclaración explícita de que un archivo sin firma digital no es necesariamente malicioso.
 
----
+6. **Consulta de Estado de Microsoft Defender y Examen Bajo Demanda**:
+   - Consulta informativa del estado del antivirus nativo, protección en tiempo real y fecha de actualización de firmas.
+   - Acción explícita para solicitar un análisis antivirus bajo demanda mediante la utilidad oficial de Windows Defender con cuadro modal de confirmación previa.
 
-## 📁 Estructura del Proyecto
+7. **Herramientas de Mantenimiento de Windows (SFC y DISM)**:
+   - Comprobador de archivos de sistema (`sfc /scannow`).
+   - Administración de imágenes de Windows (DISM `CheckHealth`, `ScanHealth` y `RestoreHealth`).
+   - Explicación de requisitos, necesidad de privilegios de administrador, objetivos y duración estimada.
+   - Ejecución bajo demanda con cuadro de confirmación previo y posibilidad de cancelación.
 
-```text
-.
-├── src/
-│   ├── components/       # Componentes reutilizables (Sidebar, Header, ToolCard, ToolDetailModal, EmptyState, CategoryPendingView)
-│   │   └── views/        # Vistas de diagnóstico nativo (SystemSummaryView, CpuView, MemoryView, StorageView)
-│   ├── data/             # Catálogo inicial de herramientas y palabras clave (toolsData.ts)
-│   ├── pages/            # Vistas principales (Home, CategoryPage, SearchPage, FavoritesPage, RecentPage, SettingsPage)
-│   ├── services/         # Servicios encapsulados (systemService.ts, storageService.ts, catalogService.ts)
-│   ├── styles/           # Estilos CSS globales y variables de tema oscuro/claro (index.css)
-│   ├── types/            # Definiciones de TypeScript (index.ts)
-│   ├── App.tsx           # Componente principal y gestión del estado global
-│   └── main.tsx          # Punto de entrada de React
-├── src-tauri/            # Configuración de Tauri 2 y comandos nativos en Rust (sysinfo)
-├── tests/                # Pruebas automatizadas (systemService, catalogService, storageService, app integration)
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
+8. **Limpieza Controlada de Archivos Temporales**:
+   - Localización y consulta de ubicaciones temporales permitidas (`%TEMP%`, `Windows\Temp`, `Logs`).
+   - Cálculo del espacio ocupado y vista previa con casillas de selección.
+   - Re-validación inmediata de rutas antes de borrar y omisión explícita de archivos bloqueados.
+   - Confirmación explícita antes de ejecutar la eliminación de temporales.
+
+9. **Catálogo Mejorado e Integración con Buscador**:
+   - Actualización de las palabras clave en español para el buscador global (`analizar archivo`, `hash`, `SHA-256`, `SHA-512`, `MD5`, `comparar archivos`, `metadatos`, `firma digital`, `certificado`, `Microsoft Defender`, `antivirus`, `malware`, `SFC`, `DISM`, `archivos temporales`, `limpieza`, `mantenimiento`, `herramientas externas`).
 
 ---
 
-## ⚙️ Comandos de Ejecución
-
-### Modo Desarrollo (Frontend Vite)
-Para ejecutar la interfaz en el navegador o entorno web de desarrollo:
-```bash
-npm run dev
-```
+## ⚙️ Instrucciones de Desarrollo y Pruebas
 
 ### Ejecutar Pruebas Automatizadas
-Para ejecutar la suite completa de pruebas unitarias e integración con Vitest:
 ```bash
 npm test
 ```
 
-### Compilar para Producción (Bundle Frontend)
-Comprueba el tipado de TypeScript y genera el bundle optimizado en `dist/`:
+### Compilar Frontend para Producción
 ```bash
 npm run build
 ```
 
+### Pasos para Probar la Aplicación en Windows
+1. Clona o descarga el repositorio en un equipo con Windows 10/11 de 64 bits.
+2. Instala Node.js v18+ y las herramientas de desarrollo de Rust (`cargo`).
+3. Ejecute `npm install` para instalar las dependencias de frontend.
+4. Para ejecutar la aplicación en entorno de desarrollo nativo Tauri:
+   ```bash
+   npm run tauri dev
+   ```
+
 ---
 
-## ⚠️ Nota sobre el Entorno de Compilación Tauri en Linux
+## ⚠️ Diferencias Importantes y Limitaciones Conocidas
 
-En este entorno de desarrollo Linux sandbox, las dependencias del sistema nativo Linux GTK/WebKit (`glib-2.0`, `webkit2gtk`) no están presentes en el sistema operativo contenedor, por lo que la generación del binario ejecutable final de Tauri no se efectúa en Linux.
-
-Los comandos nativos de Rust en `src-tauri/src/lib.rs` hacen uso de la API nativa de `sysinfo` y están completamente listos y probados con fallbacks web para ser compilados en Windows o en un pipeline de integración continua (CI) en Windows nativo.
+1. **Hashes vs Análisis Antivirus:** El cálculo de hashes (SHA-256/SHA-512) sirve para comprobar la integridad del contenido o comparar archivos, pero no certifica la ausencia de malware. El análisis de malware requiere la consulta o examen mediante Microsoft Defender.
+2. **Permisos Elevados:** Comandos como `sfc /scannow` o `DISM /Online /Cleanup-Image /RestoreHealth` requieren ejecutarse desde un proceso de Windows elevado como Administrador.
+3. **Firmas Digitales:** La verificación de firmas digitales comprueba la autenticidad del emisor y la integridad del archivo ejecutable, pero no reemplaza un análisis de vulnerabilidades o malware.
 
 ---
 
 ## 📋 Plan de Fases Futuras
 
 - [x] **Fase 1:** Estructura e interfaz inicial, catálogo, buscador global, favoritos, historial y configuración.
-- [x] **Fase 2:** Integración nativa de consulta de información real del sistema, procesador, memoria RAM y almacenamiento.
-- [ ] **Fase 3:** Herramientas de diagnóstico de red (ping, trazado de rutas, prueba de puertos, interfaces e inspección DNS).
-- [ ] **Fase 4:** Gestor de procesos del sistema, servicios de Windows, programas de inicio y limpiador de archivos temporales.
-- [ ] **Fase 5:** Empaquetado final de producción para Windows (.msi / .exe), optimizaciones finales y guías técnicas avanzadas.
+- [x] **Fase 2:** Integración nativa de consulta de información del sistema, procesador, memoria RAM y almacenamiento.
+- [x] **Fase 3 / Fase 4 (actual):** Análisis de archivos, cálculo de hashes, comparación, metadatos, firmas digitales, estado de Microsoft Defender, herramientas de mantenimiento (SFC/DISM) y limpiador de temporales.
+- [ ] **Fase 5:** Integración final de diagnósticos de red y procesos, revisión de seguridad, pruebas completas, corrección de errores y preparación de paquetes de distribución (.msi / .exe).

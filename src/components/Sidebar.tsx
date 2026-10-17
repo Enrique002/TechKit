@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Terminal size={22} />
         </div>
         <span className="brand-title">TechKit</span>
-        <span className="brand-phase">Fase 2</span>
+        <span className="brand-phase">Fase 4</span>
       </div>
 
       <nav className="sidebar-nav">

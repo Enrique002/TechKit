@@ -41,13 +41,13 @@ export const CATEGORIES: CategoryInfo[] = [
   {
     id: 'security',
     name: 'Archivos y seguridad',
-    description: 'Cálculo de hashes (MD5, SHA256), permisos de archivos y comprobación de integridad',
+    description: 'Análisis de archivos, cálculo de hashes, metadatos, firmas digitales y estado de Defender',
     iconName: 'ShieldCheck',
   },
   {
     id: 'maintenance',
     name: 'Mantenimiento y reparación',
-    description: 'Limpieza de temporales, reparación de archivos de sistema y optimización',
+    description: 'Comprobador de archivos de sistema SFC, reparación DISM y limpiador de temporales',
     iconName: 'Wrench',
   },
   {
@@ -86,7 +86,7 @@ export const CATEGORIES: CategoryInfo[] = [
 ];
 
 export const INITIAL_TOOLS: Tool[] = [
-  // Resumen / Sistema operativo (Funcional en Fase 2)
+  // Resumen / Sistema operativo (Fase 2)
   {
     id: 'sys-summary-info',
     name: 'Resumen del Equipo y Windows',
@@ -100,7 +100,7 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Muestra información real del sistema obtenida mediante consultas de la API nativa de Windows en Rust.'
   },
 
-  // Hardware y procesador (Funcional en Fase 2)
+  // Hardware y procesador (Fase 2)
   {
     id: 'hw-cpu-info',
     name: 'Información del Procesador (CPU)',
@@ -138,7 +138,7 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Descarga HWiNFO64 desde la web oficial para un análisis minucioso de sensores de voltaje y frecuencia.'
   },
 
-  // Discos y almacenamiento (Funcional en Fase 2)
+  // Discos y almacenamiento (Fase 2)
   {
     id: 'disk-storage-checker',
     name: 'Unidades y Almacenamiento',
@@ -151,142 +151,108 @@ export const INITIAL_TOOLS: Tool[] = [
     keywords: ['almacenamiento', 'disco', 'discos', 'unidades', 'espacio libre', 'capacidad', 'volumen', 'particiones', 'NTFS'],
     instructions: 'Examina todos los volúmenes de disco montados en el sistema y muestra barras de espacio libre.'
   },
-  {
-    id: 'disk-mgmt-win',
-    name: 'Administrador de discos de Windows',
-    description: 'Abre la consola de administración de particiones y volúmenes de Windows (diskmgmt.msc).',
-    category: 'disks',
-    type: 'windows_builtin',
-    status: 'pending',
-    compatibility: 'Windows todas las versiones',
-    keywords: ['disco', 'particiones', 'formatear', 'volumen', 'diskmgmt'],
-    instructions: 'Permite gestionar particiones y asignar letras de unidad en Windows.'
-  },
-  {
-    id: 'disk-crystaldisk',
-    name: 'CrystalDiskInfo (Externo)',
-    description: 'Utilidad externa estándar para monitorizar el estado de salud S.M.A.R.T. de discos rígidos y SSD.',
-    category: 'disks',
-    type: 'external_app',
-    status: 'requires_download',
-    compatibility: 'Windows 10 / 11',
-    officialUrl: 'https://crystalmark.info/en/software/crystaldiskinfo/',
-    keywords: ['disco', 'crystaldisk', 'SMART', 'salud de disco', 'ssd', 'temperatura disco'],
-    instructions: 'Visita el sitio oficial de CrystalMark para descargar la versión portable o instalable.'
-  },
 
-  // Procesos y servicios (Pendientes para Fase 4)
+  // Archivos y Seguridad (Fase 4 - Nativas disponibles)
   {
-    id: 'proc-task-mgr',
-    name: 'Administrador de Tareas de Windows',
-    description: 'Acceso directo a la herramienta nativa de monitorización de procesos y rendimiento.',
-    category: 'processes',
-    type: 'windows_builtin',
-    status: 'pending',
-    compatibility: 'Windows todas las versiones',
-    keywords: ['procesos', 'servicios', 'rendimiento', 'tarea', 'taskmgr', 'cpu', 'memoria RAM'],
-    instructions: 'Muestra el uso en tiempo real de recursos y procesos activos.'
-  },
-  {
-    id: 'proc-process-explorer',
-    name: 'Sysinternals Process Explorer',
-    description: 'Avanzado gestor de procesos de Microsoft Sysinternals con árbol de dependencias y handles.',
-    category: 'processes',
-    type: 'external_app',
-    status: 'requires_download',
-    compatibility: 'Windows 10 / 11',
-    officialUrl: 'https://learn.microsoft.com/en-us/sysinternals/downloads/process-explorer',
-    keywords: ['procesos', 'sysinternals', 'process explorer', 'dll', 'handles', 'servicios'],
-    instructions: 'Descarga directamente desde Microsoft Sysinternals.'
-  },
-
-  // Redes y conectividad (Pendientes para Fase 3)
-  {
-    id: 'net-ip-config',
-    name: 'Visor de Configuración de Red e IP',
-    description: 'Muestra adaptadores de red activos, dirección IP, máscara de subred y puerta de enlace.',
-    category: 'network',
+    id: 'sec-file-analysis',
+    name: 'Análisis de Archivos y Tipos',
+    description: 'Inspecciona un archivo local, muestra su tamaño, ruta, fechas y valida el tipo de contenido frente a la extensión.',
+    category: 'security',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
-    keywords: ['redes', 'direccion IP', 'ip', 'mac', 'ethernet', 'wifi', 'gateway', 'mascara'],
-    instructions: 'Permite inspeccionar interfaces de red y renovar direcciones DHCP.'
+    permissions: 'Usuario estándar',
+    keywords: ['analizar archivo', 'archivo', 'metadatos', 'extension', 'mime', 'tamano', 'seguridad'],
+    instructions: 'Seleccione un archivo local para examinar sus atributos de sistema de archivos.'
   },
-  {
-    id: 'net-dns-flush',
-    name: 'Limpieza de Caché DNS',
-    description: 'Ejecuta la purga del resolvedor de nombres DNS de Windows para solventar problemas de conexión.',
-    category: 'network',
-    type: 'native_techkit',
-    status: 'pending',
-    compatibility: 'Windows 10 / 11',
-    keywords: ['DNS', 'direccion IP', 'redes', 'ipconfig', 'flushdns', 'conexion', 'puertos'],
-    instructions: 'Útil cuando hay problemas de resolución de nombres de dominio.'
-  },
-  {
-    id: 'net-wireshark',
-    name: 'Wireshark (Externo)',
-    description: 'Analizador de paquetes de red y captura de tráfico en tiempo real.',
-    category: 'network',
-    type: 'external_app',
-    status: 'requires_download',
-    compatibility: 'Windows 10 / 11',
-    officialUrl: 'https://www.wireshark.org/',
-    keywords: ['redes', 'wireshark', 'paquetes', 'trafico', 'puertos', 'conexion'],
-    instructions: 'Herramienta de análisis profundo de protocolos de red.'
-  },
-
-  // Archivos y seguridad
   {
     id: 'sec-hash-calculator',
-    name: 'Calculadora de Hash de Archivos',
-    description: 'Genera huellas digitales MD5, SHA-1 y SHA-256 para verificar la integridad de archivos.',
+    name: 'Calculadora e Integridad de Hashes',
+    description: 'Calcula huellas SHA-256, SHA-512 y MD5 sobre el contenido real del archivo e incluye validador de hashes.',
     category: 'security',
     type: 'native_techkit',
-    status: 'pending',
-    compatibility: 'Todas las plataformas',
-    keywords: ['hash', 'archivos', 'sha256', 'md5', 'integridad', 'verificar'],
-    instructions: 'Soporta arrastrar y soltar archivos para verificar sumas de comprobación.'
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['hash', 'SHA-256', 'SHA-512', 'MD5', 'integridad', 'copiar hash', 'comparar hash'],
+    instructions: 'Permite copiar hashes al portapapeles y validar sumas de comprobación.'
   },
   {
-    id: 'sec-virustotal',
-    name: 'Comprobador de Archivos VirusTotal',
-    description: 'Acceso web para analizar la reputación de archivos sospechosos en más de 70 antivirus.',
+    id: 'sec-file-compare',
+    name: 'Comparación de Archivos',
+    description: 'Compara dos archivos seleccionados contrastando sus tamaños y huellas criptográficas SHA-256.',
     category: 'security',
-    type: 'external_app',
-    status: 'requires_download',
-    compatibility: 'Navegador Web',
-    officialUrl: 'https://www.virustotal.com/',
-    keywords: ['hash', 'archivos', 'antivirus', 'seguridad', 'virustotal', 'malware'],
-    instructions: 'Sube un archivo o pega su hash SHA256 en la plataforma oficial.'
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['comparar archivos', 'comparacion', 'archivos idénticos', 'SHA-256', 'diferencia'],
+    instructions: 'Selecciona dos archivos para comprobar si su contenido binario es idéntico.'
+  },
+  {
+    id: 'sec-file-metadata',
+    name: 'Consultar Metadatos de Archivos',
+    description: 'Lee cabeceras de metadatos, versiones de producto y fabricante sin ejecutar el archivo.',
+    category: 'security',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['metadatos', 'version', 'fabricante', 'ejecutable', 'cabecera', 'producto'],
+    instructions: 'Obtiene detalles de versión de ejecutables y librerías.'
+  },
+  {
+    id: 'sec-digital-signature',
+    name: 'Verificación de Firmas Digitales',
+    description: 'Comprueba si un ejecutable o biblioteca posee firma PKCS#7 válida, mostrando el firmante y la entidad emisora.',
+    category: 'security',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['firma digital', 'certificado', 'firmante', 'valida', 'PKCS7', 'confianza'],
+    instructions: 'Examina la autenticidad del firmante en el almacén de certificados.'
+  },
+  {
+    id: 'sec-defender-status',
+    name: 'Estado de Microsoft Defender y Análisis',
+    description: 'Muestra la disponibilidad, protección en tiempo real y permite solicitar exámenes antivirus bajo demanda.',
+    category: 'security',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar',
+    keywords: ['Microsoft Defender', 'antivirus', 'malware', 'proteccion en tiempo real', 'analisis antivirus'],
+    instructions: 'Permite realizar análisis bajo demanda previa confirmación del usuario.'
   },
 
-  // Mantenimiento y reparación
+  // Mantenimiento de Windows (Fase 4 - Nativas disponibles)
   {
-    id: 'maint-sfc-scannow',
-    name: 'Comprobador de Archivos de Sistema (SFC)',
-    description: 'Guía y ejecución controlada del comando sfc /scannow de Windows para reparar archivos dañados.',
+    id: 'maint-sfc-dism-tools',
+    name: 'Comprobador SFC y Reparación DISM',
+    description: 'Ejecución guiada y controlada de sfc /scannow y comandos de mantenimiento DISM.',
     category: 'maintenance',
-    type: 'windows_builtin',
-    status: 'pending',
+    type: 'native_techkit',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
     permissions: 'Administrador requerido',
-    keywords: ['mantenimiento', 'limpieza', 'errores de Windows', 'sfc', 'scannow', 'recuperacion', 'reparacion'],
-    instructions: 'Examina la integridad de todos los archivos protegidos del sistema.'
+    keywords: ['SFC', 'DISM', 'scannow', 'reparacion', 'archivos de sistema', 'imagen de windows', 'mantenimiento'],
+    instructions: 'Requiere elevación de privilegios para efectuar reparaciones en la imagen de Windows.'
   },
   {
-    id: 'maint-temp-cleaner',
+    id: 'maint-temp-cleaner-view',
     name: 'Limpiador de Archivos Temporales',
-    description: 'Identifica y elimina archivos temporales de usuario y caché del sistema.',
+    description: 'Escanea carpetas temporales explícitamente permitidas y efectúa limpiezas previa vista previa y confirmación.',
     category: 'maintenance',
     type: 'native_techkit',
-    status: 'pending',
+    status: 'available',
     compatibility: 'Windows 10 / 11',
-    keywords: ['limpieza', 'mantenimiento', 'temporales', 'espacio', 'disco'],
-    instructions: 'Libera espacio en disco eliminando archivos innecesarios de %TEMP%.'
+    permissions: 'Usuario / Administrador',
+    keywords: ['archivos temporales', 'limpieza', 'mantenimiento', 'temporales', 'espacio libre', 'liberar disco'],
+    instructions: 'Muestra una vista previa del espacio candidato antes de eliminar ningún elemento.'
   },
 
-  // Herramientas descargables
+  // Catálogo Descargable Externo
   {
     id: 'dl-7zip',
     name: '7-Zip Archivador',
@@ -296,7 +262,7 @@ export const INITIAL_TOOLS: Tool[] = [
     status: 'requires_download',
     compatibility: 'Windows todas las versiones',
     officialUrl: 'https://www.7-zip.org/',
-    keywords: ['archivos', 'compresor', 'zip', '7z', 'rar', 'descarga'],
+    keywords: ['archivos', 'compresor', 'zip', '7z', 'rar', 'herramientas externas'],
     instructions: 'Obtén el instalador MSI oficial desde 7-zip.org.'
   },
   {
@@ -308,8 +274,20 @@ export const INITIAL_TOOLS: Tool[] = [
     status: 'requires_download',
     compatibility: 'Windows 8 / 10 / 11',
     officialUrl: 'https://rufus.ie/',
-    keywords: ['usb', 'booteable', 'iso', 'windows', 'rufus', 'descarga'],
+    keywords: ['usb', 'booteable', 'iso', 'windows', 'rufus', 'herramientas externas'],
     instructions: 'Descarga la versión portable oficial directamente sin instalación.'
+  },
+  {
+    id: 'dl-autoruns',
+    name: 'Sysinternals AutoRuns',
+    description: 'Muestra todas las aplicaciones, servicios y controladores configurados para iniciarse con Windows.',
+    category: 'downloadable',
+    type: 'external_app',
+    status: 'requires_download',
+    compatibility: 'Windows 10 / 11',
+    officialUrl: 'https://learn.microsoft.com/en-us/sysinternals/downloads/autoruns',
+    keywords: ['inicio', 'autoruns', 'sysinternals', 'procesos', 'herramientas externas'],
+    instructions: 'Descarga desde el repositorio oficial de Microsoft Sysinternals.'
   },
 
   // Guías de resolución
@@ -345,18 +323,22 @@ export const INITIAL_TOOLS: Tool[] = [
 ];
 
 export const POPULAR_KEYWORDS = [
-  'procesador',
-  'cpu',
-  'memoria',
-  'RAM',
-  'almacenamiento',
-  'disco',
-  'unidades',
-  'espacio libre',
-  'sistema operativo',
-  'información del equipo',
-  'DNS',
-  'direccion IP',
+  'analizar archivo',
   'hash',
-  'errores de Windows'
+  'SHA-256',
+  'SHA-512',
+  'MD5',
+  'comparar archivos',
+  'metadatos',
+  'firma digital',
+  'certificado',
+  'Microsoft Defender',
+  'antivirus',
+  'malware',
+  'SFC',
+  'DISM',
+  'archivos temporales',
+  'limpieza',
+  'mantenimiento',
+  'herramientas externas'
 ];
