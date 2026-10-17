@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Star, ExternalLink, Clock } from 'lucide-react';
 import { Tool } from '../types';
+import { urlService } from '../services/urlService';
 
 interface ToolDetailModalProps {
   tool: Tool | null;
@@ -47,9 +48,12 @@ export const ToolDetailModal: React.FC<ToolDetailModalProps> = ({
     }
   };
 
-  const handleExternalClick = () => {
+  const handleExternalClick = async () => {
     if (tool.officialUrl) {
-      window.open(tool.officialUrl, '_blank', 'noopener,noreferrer');
+      const res = await urlService.openExternalUrl(tool.officialUrl);
+      if (!res.success) {
+        alert(res.message);
+      }
     }
   };
 

@@ -107,15 +107,15 @@ const MOCK_DISKS: DiskVolume[] = [
 ];
 
 const MOCK_GPU: GpuInfo = {
-  model: 'NVIDIA GeForce RTX 3080 Ti',
+  model: 'NVIDIA GeForce RTX 5080',
   vendor: 'NVIDIA Corporation',
-  dedicatedMemoryBytes: 12884901888, // 12 GB
-  sharedMemoryBytes: 17179869184,   // 16 GB
-  usagePercentage: 24.0,
-  temperatureC: 48,
-  powerDrawWatts: 115,
-  driverVersion: '551.86 (WHQL)',
-  displaysConnected: ['Display 1: 2560x1440 @ 144Hz (DP)', 'Display 2: 1920x1080 @ 60Hz (HDMI)'],
+  dedicatedMemoryBytes: 17179869184, // 16 GB
+  sharedMemoryBytes: 34359738368,   // 32 GB
+  usagePercentage: 18.0,
+  temperatureC: 39,
+  powerDrawWatts: 110,
+  driverVersion: '555.99 (WHQL)',
+  displaysConnected: ['DisplayPort 1: 3840x2160 @ 144Hz (NVIDIA G-SYNC)'],
 };
 
 const MOCK_MOTHERBOARD: MotherboardBiosInfo = {
