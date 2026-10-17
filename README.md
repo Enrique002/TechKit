@@ -6,7 +6,7 @@ TechKit es una aplicación de escritorio diseñada para técnicos informáticos 
 
 ---
 
-## 📐 Rediseño Visual Rectilíneo (Fase 5)
+## Rediseño Visual Rectilíneo (Fase 5)
 
 El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
 - Un **buscador global** de herramientas, comandos y palabras clave habituales.
@@ -18,7 +18,7 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **React 19**: Construcción de la interfaz gráfica interactiva.
 - **TypeScript 5**: Tipado estático y solidez en modelos de datos.
@@ -29,7 +29,7 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## 💻 Funcionalidades Implementadas (Fase 3)
+## Funcionalidades Implementadas (Fase 3)
 
 1. **Gestor de Procesos de Windows**:
    - Consulta de procesos activos con PID, uso de CPU %, consumo de memoria RAM, ejecutable y usuario propietario.
@@ -65,7 +65,7 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
    - Sistema de **Favoritos** e **Historial Reciente** con persistencia en `localStorage`.
    - Selector de tema claro / oscuro y restablecimiento de preferencias.
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 .
@@ -89,7 +89,7 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## ⚙️ Comandos de Desarrollo y Pruebas
+## Comandos de Desarrollo y Pruebas
 
 ### Modo Desarrollo (Vite Frontend)
 ```bash
@@ -118,13 +118,3 @@ npm run tauri build
 
 - **Permisos Elevados:** Operaciones como detener ciertos procesos de otros usuarios o iniciar/detener servicios de Windows pueden requerir ejecutar TechKit con permisos de Administrador elevado (`Ejecutar como administrador`). Si los permisos son insuficientes, TechKit informará adecuadamente al usuario sin provocar bloqueos.
 - **Entorno Linux Sandbox:** En entornos contenedores Linux donde no estén presentes dependencias GTK/WebKit de Tauri, la aplicación web funciona con un fallback de datos enriquecidos para desarrollo y pruebas.
-
----
-
-## ⚠️ NOTA SOBRE EL ENTORNO SANDBOX LINUX Y WINDOWS
-
-- [x] **Fase 1:** Estructura e interfaz inicial, catálogo, buscador global, favoritos, historial y configuración.
-- [x] **Fase 2:** Integración nativa de consulta de información real del sistema, procesador, memoria RAM y almacenamiento.
-- [x] **Fase 3:** Procesos, servicios de Windows, diagnóstico de red, conectividad y puertos.
-- [ ] **Fase 4:** Análisis de archivos, seguridad (hashes MD5/SHA256, VirusTotal) y herramientas adicionales de mantenimiento y reparación.
-- [ ] **Fase 5:** Integración final, revisión general, pruebas, empaquetado (.msi / .exe) y preparación de la versión de distribución.
