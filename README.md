@@ -1,8 +1,8 @@
 # TechKit
 
-**Estado: en desarrollo. Fase 2 de 5.**
+**Estado: en desarrollo. Fase 3 de 5.**
 
-TechKit es una aplicación de escritorio diseñada para técnicos informáticos y administradores de sistemas que necesitan reunir en un único panel de trabajo herramientas de diagnóstico, mantenimiento, utilidades integradas de Windows, programas externos recomendados y guías técnicas de resolución de incidencias.
+TechKit es una aplicación de escritorio diseñada para técnicos informáticos y administradores de sistemas que centraliza herramientas de diagnóstico, gestión de procesos y servicios, utilidades de red, mantenimiento y guías de resolución de incidencias en un panel unificado.
 
 ---
 
@@ -10,9 +10,11 @@ TechKit es una aplicación de escritorio diseñada para técnicos informáticos 
 
 El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
 - Un **buscador global** de herramientas, comandos y palabras clave habituales.
-- Una **navegación estructurada** por categorías técnicas (Hardware, Discos, Sistema Operativo, Procesos, Redes, Seguridad, Mantenimiento, Herramientas Descargables y Guías).
+- Una **navegación estructurada** por categorías técnicas (Hardware, Discos, Sistema Operativo, Procesos y servicios, Redes y conectividad, Seguridad, Mantenimiento, Herramientas Descargables y Guías).
 - Un **sistema de favoritos** e **historial reciente** persistente.
-- **Consultas reales del sistema operativo** (añadidas en la Fase 2): información del equipo, especificaciones y uso dinámico del procesador (CPU), memoria RAM física (utilizada/disponible) y análisis de volúmenes de discos/unidades con espacio libre real.
+- **Consultas reales del sistema operativo**:
+  - **Fase 2:** Resumen del equipo, uso de procesador (CPU), memoria RAM física y análisis de volúmenes de almacenamiento.
+  - **Fase 3:** Gestor de procesos activos con finalización segura, administrador de servicios de Windows, diagnóstico de interfaces de red, herramientas de conectividad (Ping ICMP, resolución DNS, trazado de rutas) e inspección de puertos y sockets activos.
 
 ---
 
@@ -27,36 +29,35 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## 💻 Funcionalidades Implementadas (Fase 2)
+## 💻 Funcionalidades Implementadas (Fase 3)
 
-1. **Resumen del Equipo y Windows**:
-   - Nombre del equipo (Hostname).
-   - Usuario actual del sistema.
-   - Edición y versión exacta de Windows.
-   - Arquitectura del sistema (x64 / ARM64 / x86).
-   - Tiempo de actividad del sistema (Uptime) formateado.
-   - Fecha y hora de la consulta con botón de actualización manual.
+1. **Gestor de Procesos de Windows**:
+   - Consulta de procesos activos con PID, uso de CPU %, consumo de memoria RAM, ejecutable y usuario propietario.
+   - Búsqueda en tiempo real por nombre de proceso, PID o ruta.
+   - Ordenación dinámica por CPU, memoria, nombre o PID.
+   - Actualización manual y refresco automático periódico seguro (3s).
+   - Modal de detalles con opción de copiar la ruta completa del ejecutable.
+   - Finalización segura de procesos con confirmación explícita y protección de procesos críticos del sistema (PID <= 4, `svchost.exe`, `explorer.exe`, etc.) tanto en frontend como en el backend en Rust.
 
-2. **Procesador (CPU)**:
-   - Modelo exacto del procesador.
-   - Conteo de núcleos físicos y procesadores lógicos (hilos).
-   - Porcentaje de utilización global calculado mediante mediciones reales del sistema.
-   - Opción de monitoreo en tiempo real con frecuencia de actualización periódica segura.
+2. **Servicios de Windows**:
+   - Listado de servicios instalados con nombre interno, nombre descriptivo, estado real (`Running`, `Stopped`), tipo de inicio y descripción.
+   - Búsqueda y filtrado por estado.
+   - Control seguro para Iniciar o Detener servicios con confirmación explícita y avisos sobre requerimiento de permisos elevados de Administrador.
 
-3. **Memoria RAM**:
-   - Memoria física total, utilizada y disponible.
-   - Porcentaje de utilización real con barra de estado dinámica e indicadores de contraste.
-   - Formato automático en GB/MB.
+3. **Adaptadores e Interfaces de Red**:
+   - Identificación de adaptadores Ethernet, Wi-Fi y virtuales.
+   - Direcciones IPv4, IPv6, dirección MAC, puerta de enlace predeterminada y servidores DNS configurados.
+   - Indicador dinámico de estado de conexión y fecha/hora de la última consulta.
 
-4. **Unidades y Almacenamiento**:
-   - Detección de todos los volúmenes montados (C:, D:, etc.).
-   - Identificación de etiquetas de volumen, sistema de archivos (NTFS, FAT32) y unidades extraíbles.
-   - Cálculo de capacidad total, espacio utilizado y espacio libre.
-   - Barra visual de ocupación de disco por cada unidad.
+4. **Herramientas de Diagnóstico de Conectividad**:
+   - **Ping ICMP:** Prueba de latencia con métricas de tiempo mínimo, promedio y máximo en milisegundos, porcentaje de pérdida de paquetes y desglose de respuestas. Sanitización estricta de la entrada del usuario para prevenir inyección de comandos.
+   - **Resolución DNS:** Consulta de nombres de dominio y desglose de direcciones IP asociadas con cálculo de tiempo de respuesta.
+   - **Trazado de Ruta (Traceroute):** Mapeo de saltos intermedios y tiempo RTT.
 
-5. **Buscador Global y Persistencia**:
-   - Búsqueda por palabras clave en español como `procesador`, `cpu`, `memoria`, `RAM`, `almacenamiento`, `disco`, `espacio libre`, `unidades`, `sistema operativo`, etc.
-   - Favoritos e historial de herramientas consultadas sincronizados de forma persistente en almacenamiento local.
+5. **Conexiones Activas, Puertos e Inspector**:
+   - Tabla de sockets de red activos en tiempo real (TCP/UDP, dirección y puerto local, dirección y puerto remoto, estado `LISTEN` / `ESTABLISHED`, PID y proceso asociado).
+   - Buscador e Inspector de Puerto específico (validación de rango 1 - 65535) con explicación didáctica sobre puertos en escucha vs conexiones establecidas.
+   - **Navegación cruzada bidireccional:** Enlace directo desde una conexión o puerto hacia el proceso correspondiente en el Gestor de Procesos mediante el PID, conservando el contexto.
 
 ---
 
@@ -65,17 +66,17 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 ```text
 .
 ├── src/
-│   ├── components/       # Componentes reutilizables (Sidebar, Header, ToolCard, ToolDetailModal, EmptyState, CategoryPendingView)
-│   │   └── views/        # Vistas de diagnóstico nativo (SystemSummaryView, CpuView, MemoryView, StorageView)
-│   ├── data/             # Catálogo inicial de herramientas y palabras clave (toolsData.ts)
+│   ├── components/       # Componentes reutilizables (Sidebar, Header, ToolCard, ToolDetailModal, EmptyState)
+│   │   └── views/        # Vistas de diagnóstico nativo (SystemSummaryView, CpuView, MemoryView, StorageView, ProcessesView, ServicesView, NetworkView)
+│   ├── data/             # Catálogo inicial de herramientas y palabras clave en español (toolsData.ts)
 │   ├── pages/            # Vistas principales (Home, CategoryPage, SearchPage, FavoritesPage, RecentPage, SettingsPage)
-│   ├── services/         # Servicios encapsulados (systemService.ts, storageService.ts, catalogService.ts)
+│   ├── services/         # Servicios encapsulados (systemService, processService, windowServicesService, networkService, storageService, catalogService)
 │   ├── styles/           # Estilos CSS globales y variables de tema oscuro/claro (index.css)
 │   ├── types/            # Definiciones de TypeScript (index.ts)
 │   ├── App.tsx           # Componente principal y gestión del estado global
 │   └── main.tsx          # Punto de entrada de React
-├── src-tauri/            # Configuración de Tauri 2 y comandos nativos en Rust (sysinfo)
-├── tests/                # Pruebas automatizadas (systemService, catalogService, storageService, app integration)
+├── src-tauri/            # Configuración de Tauri 2 y comandos nativos en Rust (sysinfo, network)
+├── tests/                # Pruebas automatizadas (systemService, processService, windowServicesService, networkService, catalogService, storageService, app integration)
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -93,7 +94,7 @@ npm run dev
 ```
 
 ### Ejecutar Pruebas Automatizadas
-Para ejecutar la suite completa de pruebas unitarias e integración con Vitest:
+Para ejecutar la suite completa de 24 pruebas unitarias e integración con Vitest:
 ```bash
 npm test
 ```
@@ -106,11 +107,10 @@ npm run build
 
 ---
 
-## ⚠️ Nota sobre el Entorno de Compilación Tauri en Linux
+## ⚠️ Nota sobre Permisos y Entorno de Ejecución
 
-En este entorno de desarrollo Linux sandbox, las dependencias del sistema nativo Linux GTK/WebKit (`glib-2.0`, `webkit2gtk`) no están presentes en el sistema operativo contenedor, por lo que la generación del binario ejecutable final de Tauri no se efectúa en Linux.
-
-Los comandos nativos de Rust en `src-tauri/src/lib.rs` hacen uso de la API nativa de `sysinfo` y están completamente listos y probados con fallbacks web para ser compilados en Windows o en un pipeline de integración continua (CI) en Windows nativo.
+- **Permisos Elevados:** Operaciones como detener ciertos procesos de otros usuarios o iniciar/detener servicios de Windows pueden requerir ejecutar TechKit con permisos de Administrador elevado (`Ejecutar como administrador`). Si los permisos son insuficientes, TechKit informará adecuadamente al usuario sin provocar bloqueos.
+- **Entorno Linux Sandbox:** En entornos contenedores Linux donde no estén presentes dependencias GTK/WebKit de Tauri, la aplicación web funciona con un fallback de datos enriquecidos para desarrollo y pruebas.
 
 ---
 
@@ -118,6 +118,6 @@ Los comandos nativos de Rust en `src-tauri/src/lib.rs` hacen uso de la API nativ
 
 - [x] **Fase 1:** Estructura e interfaz inicial, catálogo, buscador global, favoritos, historial y configuración.
 - [x] **Fase 2:** Integración nativa de consulta de información real del sistema, procesador, memoria RAM y almacenamiento.
-- [ ] **Fase 3:** Herramientas de diagnóstico de red (ping, trazado de rutas, prueba de puertos, interfaces e inspección DNS).
-- [ ] **Fase 4:** Gestor de procesos del sistema, servicios de Windows, programas de inicio y limpiador de archivos temporales.
-- [ ] **Fase 5:** Empaquetado final de producción para Windows (.msi / .exe), optimizaciones finales y guías técnicas avanzadas.
+- [x] **Fase 3:** Procesos, servicios de Windows, diagnóstico de red, conectividad y puertos.
+- [ ] **Fase 4:** Análisis de archivos, seguridad (hashes MD5/SHA256, VirusTotal) y herramientas adicionales de mantenimiento y reparación.
+- [ ] **Fase 5:** Integración final, revisión general, pruebas, empaquetado (.msi / .exe) y preparación de la versión de distribución.
