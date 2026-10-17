@@ -96,3 +96,99 @@ export interface DiskVolume {
   usagePercentage: number;
   isRemovable: boolean;
 }
+
+// Phase 3 Data Models
+
+export interface ProcessInfo {
+  pid: number;
+  name: string;
+  cpuUsagePercentage: number;
+  memoryBytes: number;
+  exePath: string;
+  user: string;
+  status: string;
+  isCritical: boolean;
+}
+
+export interface ProcessKillResult {
+  success: boolean;
+  message: string;
+  pid: number;
+}
+
+export interface WindowsServiceInfo {
+  name: string;
+  displayName: string;
+  status: 'Running' | 'Stopped' | 'Paused' | 'StartPending' | 'StopPending' | 'Unknown';
+  startType: 'Automatic' | 'Manual' | 'Disabled' | 'Unknown';
+  description: string;
+  isCritical: boolean;
+}
+
+export interface ServiceControlResult {
+  success: boolean;
+  message: string;
+  serviceName: string;
+  newStatus?: string;
+}
+
+export interface NetworkInterfaceInfo {
+  id: string;
+  name: string;
+  adapterName: string;
+  status: 'connected' | 'disconnected' | 'unknown';
+  ipv4Addresses: string[];
+  ipv6Addresses: string[];
+  macAddress: string;
+  gateway: string;
+  dnsServers: string[];
+  isVirtual: boolean;
+}
+
+export interface PingResult {
+  target: string;
+  packetsSent: number;
+  packetsReceived: number;
+  packetsLost: number;
+  minRttMs?: number;
+  avgRttMs?: number;
+  maxRttMs?: number;
+  success: boolean;
+  error?: string;
+  details: string[];
+}
+
+export interface DnsLookupResult {
+  hostname: string;
+  addresses: string[];
+  status: 'success' | 'no_records' | 'dns_error' | 'execution_failed';
+  errorMessage?: string;
+  queryTimeMs: number;
+}
+
+export interface TraceHop {
+  hopNumber: number;
+  ip: string;
+  hostname?: string;
+  rttMs?: number;
+  status: 'ok' | 'timeout' | 'error';
+}
+
+export interface TraceRouteResult {
+  target: string;
+  hops: TraceHop[];
+  completed: boolean;
+  error?: string;
+}
+
+export interface NetworkConnectionInfo {
+  id: string;
+  protocol: 'TCP' | 'UDP';
+  localAddress: string;
+  localPort: number;
+  remoteAddress: string;
+  remotePort: number;
+  state: 'LISTEN' | 'ESTABLISHED' | 'CLOSE_WAIT' | 'TIME_WAIT' | 'SYN_SENT' | 'SYN_RECV' | 'FIN_WAIT1' | 'FIN_WAIT2' | 'CLOSING' | 'LAST_ACK' | 'UNKNOWN' | 'N/A';
+  pid: number;
+  processName?: string;
+}

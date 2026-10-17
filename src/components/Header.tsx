@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
         <h1 className="header-page-title">{title}</h1>
         <div className="status-badge-dev">
           <span className="status-dot"></span>
-          <span>Fase 5 (Versión Final)</span>
+          <span>Fase 3 (En desarrollo)</span>
         </div>
       </div>
 

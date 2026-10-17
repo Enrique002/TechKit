@@ -179,6 +179,7 @@ export const App: React.FC = () => {
             isFavorite={isFavorite}
             onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
             onSelectTool={handleSelectTool}
+            onNavigateCategory={(cat) => setActiveCategory(cat)}
           />
         );
     }

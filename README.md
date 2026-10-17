@@ -1,17 +1,20 @@
 # TechKit — Kit de Herramientas para Técnicos Informáticos
 
-**Estado: Versión Final 1.0.0 (Fase 5 de 5 Completada).**
+**Estado: en desarrollo. Fase 3 de 5.**
 
-TechKit es una aplicación de escritorio para Windows diseñada para técnicos informáticos y administradores de sistemas que centraliza en una única interfaz herramientas de diagnóstico, monitorización de recursos, utilidades de red, cálculo de seguridad/hashes, mantenimiento y guías de resolución.
+TechKit es una aplicación de escritorio diseñada para técnicos informáticos y administradores de sistemas que centraliza herramientas de diagnóstico, gestión de procesos y servicios, utilidades de red, mantenimiento y guías de resolución de incidencias en un panel unificado.
 
 ---
 
 ## 📐 Rediseño Visual Rectilíneo (Fase 5)
 
-En la Fase 5, TechKit ha adoptado un **lenguaje visual rectilíneo y técnico**:
-- **Geometría de 90 grados**: Todos los elementos de interfaz (tarjetas, botones, campos de búsqueda, modales, tablas, insignias, casillas de verificación, menús y barras de progreso) utilizan un radio de borde de `0px` (`border-radius: 0`).
-- **Bordes limpios y alta legibilidad**: Separadores rectos y delgados para estructurar la interfaz sin recurrir a esquinas redondeadas o formas tipo cápsula decorativas.
-- **Identidad cromática técnica**: Paleta oscura neutra con acento turquesa (`#00d2a0`), fuentes técnicas monoespaciadas para PIDs, IPs, MACs y Hashes, y soporte para tema claro y oscuro rectilíneos.
+El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
+- Un **buscador global** de herramientas, comandos y palabras clave habituales.
+- Una **navegación estructurada** por categorías técnicas (Hardware, Discos, Sistema Operativo, Procesos y servicios, Redes y conectividad, Seguridad, Mantenimiento, Herramientas Descargables y Guías).
+- Un **sistema de favoritos** e **historial reciente** persistente.
+- **Consultas reales del sistema operativo**:
+  - **Fase 2:** Resumen del equipo, uso de procesador (CPU), memoria RAM física y análisis de volúmenes de almacenamiento.
+  - **Fase 3:** Gestor de procesos activos con finalización segura, administrador de servicios de Windows, diagnóstico de interfaces de red, herramientas de conectividad (Ping ICMP, resolución DNS, trazado de rutas) e inspección de puertos y sockets activos.
 
 ---
 
@@ -26,7 +29,35 @@ En la Fase 5, TechKit ha adoptado un **lenguaje visual rectilíneo y técnico**:
 
 ---
 
-## 💻 Funcionalidades Verificadas (Fases 1 a 5)
+## 💻 Funcionalidades Implementadas (Fase 3)
+
+1. **Gestor de Procesos de Windows**:
+   - Consulta de procesos activos con PID, uso de CPU %, consumo de memoria RAM, ejecutable y usuario propietario.
+   - Búsqueda en tiempo real por nombre de proceso, PID o ruta.
+   - Ordenación dinámica por CPU, memoria, nombre o PID.
+   - Actualización manual y refresco automático periódico seguro (3s).
+   - Modal de detalles con opción de copiar la ruta completa del ejecutable.
+   - Finalización segura de procesos con confirmación explícita y protección de procesos críticos del sistema (PID <= 4, `svchost.exe`, `explorer.exe`, etc.) tanto en frontend como en el backend en Rust.
+
+2. **Servicios de Windows**:
+   - Listado de servicios instalados con nombre interno, nombre descriptivo, estado real (`Running`, `Stopped`), tipo de inicio y descripción.
+   - Búsqueda y filtrado por estado.
+   - Control seguro para Iniciar o Detener servicios con confirmación explícita y avisos sobre requerimiento de permisos elevados de Administrador.
+
+3. **Adaptadores e Interfaces de Red**:
+   - Identificación de adaptadores Ethernet, Wi-Fi y virtuales.
+   - Direcciones IPv4, IPv6, dirección MAC, puerta de enlace predeterminada y servidores DNS configurados.
+   - Indicador dinámico de estado de conexión y fecha/hora de la última consulta.
+
+4. **Herramientas de Diagnóstico de Conectividad**:
+   - **Ping ICMP:** Prueba de latencia con métricas de tiempo mínimo, promedio y máximo en milisegundos, porcentaje de pérdida de paquetes y desglose de respuestas. Sanitización estricta de la entrada del usuario para prevenir inyección de comandos.
+   - **Resolución DNS:** Consulta de nombres de dominio y desglose de direcciones IP asociadas con cálculo de tiempo de respuesta.
+   - **Trazado de Ruta (Traceroute):** Mapeo de saltos intermedios y tiempo RTT.
+
+5. **Conexiones Activas, Puertos e Inspector**:
+   - Tabla de sockets de red activos en tiempo real (TCP/UDP, dirección y puerto local, dirección y puerto remoto, estado `LISTEN` / `ESTABLISHED`, PID y proceso asociado).
+   - Buscador e Inspector de Puerto específico (validación de rango 1 - 65535) con explicación didáctica sobre puertos en escucha vs conexiones establecidas.
+   - **Navegación cruzada bidireccional:** Enlace directo desde una conexión o puerto hacia el proceso correspondiente en el Gestor de Procesos mediante el PID, conservando el contexto.
 
 1. **Estructura y Navegación (Fase 1)**:
    - Navegación lateral por categorías técnicas y accesos rápidos.
@@ -34,28 +65,27 @@ En la Fase 5, TechKit ha adoptado un **lenguaje visual rectilíneo y técnico**:
    - Sistema de **Favoritos** e **Historial Reciente** con persistencia en `localStorage`.
    - Selector de tema claro / oscuro y restablecimiento de preferencias.
 
-2. **Sistema Operativo y Hardware (Fase 2)**:
-   - Resumen del equipo: Hostname, usuario, edición de Windows, arquitectura y tiempo de actividad (Uptime).
-   - Procesador (CPU): Modelo, núcleos físicos/lógicos, uso global en tiempo real y monitoreo periódico.
-   - Memoria RAM: Capacidad física total, memoria usada, disponible y porcentaje con barra rectangular.
-   - Discos y Almacenamiento: Volúmenes montados (C:, D:, etc.), etiquetas, sistema de archivos (NTFS/FAT32) y espacio libre.
+## 📁 Estructura del Proyecto
 
-3. **Procesos y Servicios (Fase 3)**:
-   - Inspección de procesos activos ordenados por consumo de memoria y CPU con filtrado dinámico por nombre o PID.
-   - Estado de servicios de Windows (WinDefend, Windows Update, Spooler, DHCP) y tipo de inicio.
-
-4. **Redes y Conectividad (Fase 3)**:
-   - Lista de adaptadores de red activos con direcciones IP, direcciones MAC y bytes enviados/recibidos.
-   - **Herramienta de Ping e ICMP**: Prueba de latencia y tiempo de respuesta en ms para direcciones IP o dominios.
-
-5. **Archivos y Seguridad (Fase 4)**:
-   - **Calculadora de Hashes**: Cálculo instantáneo en memoria de huellas MD5, SHA-1 y SHA-256 para texto o archivos seleccionados.
-   - **Verificación de Integridad**: Comparador de sumas de comprobación con indicador de coincidencia.
-   - Inspección de estado de protección de Microsoft Defender y Firewall.
-
-6. **Mantenimiento y Reparación (Fase 4)**:
-   - **Limpiador de Archivos Temporales**: Detección y eliminación segura de caché de %TEMP% y archivos temporales del sistema previa confirmación explícita.
-   - **Guía de Reparación SFC y DISM**: Guía y ejecución de comandos `sfc /scannow` y `DISM RestoreHealth`.
+```text
+.
+├── src/
+│   ├── components/       # Componentes reutilizables (Sidebar, Header, ToolCard, ToolDetailModal, EmptyState)
+│   │   └── views/        # Vistas de diagnóstico nativo (SystemSummaryView, CpuView, MemoryView, StorageView, ProcessesView, ServicesView, NetworkView)
+│   ├── data/             # Catálogo inicial de herramientas y palabras clave en español (toolsData.ts)
+│   ├── pages/            # Vistas principales (Home, CategoryPage, SearchPage, FavoritesPage, RecentPage, SettingsPage)
+│   ├── services/         # Servicios encapsulados (systemService, processService, windowServicesService, networkService, storageService, catalogService)
+│   ├── styles/           # Estilos CSS globales y variables de tema oscuro/claro (index.css)
+│   ├── types/            # Definiciones de TypeScript (index.ts)
+│   ├── App.tsx           # Componente principal y gestión del estado global
+│   └── main.tsx          # Punto de entrada de React
+├── src-tauri/            # Configuración de Tauri 2 y comandos nativos en Rust (sysinfo, network)
+├── tests/                # Pruebas automatizadas (systemService, processService, windowServicesService, networkService, catalogService, storageService, app integration)
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
 
 ---
 
@@ -67,6 +97,7 @@ npm run dev
 ```
 
 ### Ejecutar Pruebas Automatizadas
+Para ejecutar la suite completa de 24 pruebas unitarias e integración con Vitest:
 ```bash
 npm test
 ```
@@ -83,22 +114,17 @@ npm run tauri build
 
 ---
 
-## 📦 Compilación y Distribución para Windows (.exe / .msi)
+## ⚠️ Nota sobre Permisos y Entorno de Ejecución
 
-El flujo de Integración Continua (CI) mediante **GitHub Actions** está configurado en `.github/workflows/build.yml`.
-
-Al hacer un commit o etiquetar una versión en GitHub, el flujo automático ejecuta:
-1. Instalación de Node.js y Toolchain de Rust stable en `windows-latest`.
-2. Ejecución de la suite de pruebas unitarias (`npm test`).
-3. Compilación del bundle frontend (`npm run build`).
-4. Generación del ejecutable y los instaladores mediante `tauri build`.
-5. Publicación de los artefactos generados:
-   - Ejecutable portátil: `src-tauri/target/release/techkit.exe`
-   - Instalador MSI: `src-tauri/target/release/bundle/msi/TechKit_1.0.0_x64_en-US.msi`
-   - Instalador NSIS: `src-tauri/target/release/bundle/nsis/TechKit_1.0.0_x64-setup.exe`
+- **Permisos Elevados:** Operaciones como detener ciertos procesos de otros usuarios o iniciar/detener servicios de Windows pueden requerir ejecutar TechKit con permisos de Administrador elevado (`Ejecutar como administrador`). Si los permisos son insuficientes, TechKit informará adecuadamente al usuario sin provocar bloqueos.
+- **Entorno Linux Sandbox:** En entornos contenedores Linux donde no estén presentes dependencias GTK/WebKit de Tauri, la aplicación web funciona con un fallback de datos enriquecidos para desarrollo y pruebas.
 
 ---
 
 ## ⚠️ NOTA SOBRE EL ENTORNO SANDBOX LINUX Y WINDOWS
 
-En el contenedor ejecutor actual (entorno Linux sandbox), la compilación del binario `.exe` nativo de Windows no puede efectuarse directamente sin las herramientas cruzadas de Windows Target o un host Windows nativo. El flujo de GitHub Actions incluido permite compilar los instaladores `.exe` y `.msi` directamente en la nube Windows.
+- [x] **Fase 1:** Estructura e interfaz inicial, catálogo, buscador global, favoritos, historial y configuración.
+- [x] **Fase 2:** Integración nativa de consulta de información real del sistema, procesador, memoria RAM y almacenamiento.
+- [x] **Fase 3:** Procesos, servicios de Windows, diagnóstico de red, conectividad y puertos.
+- [ ] **Fase 4:** Análisis de archivos, seguridad (hashes MD5/SHA256, VirusTotal) y herramientas adicionales de mantenimiento y reparación.
+- [ ] **Fase 5:** Integración final, revisión general, pruebas, empaquetado (.msi / .exe) y preparación de la versión de distribución.

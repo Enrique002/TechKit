@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CategoryId, Tool } from '../types';
 import { catalogService } from '../services/catalogService';
 import { ToolCard } from '../components/ToolCard';
@@ -9,15 +9,15 @@ import { CpuView } from '../components/views/CpuView';
 import { MemoryView } from '../components/views/MemoryView';
 import { StorageView } from '../components/views/StorageView';
 import { ProcessesView } from '../components/views/ProcessesView';
+import { ServicesView } from '../components/views/ServicesView';
 import { NetworkView } from '../components/views/NetworkView';
-import { SecurityView } from '../components/views/SecurityView';
-import { MaintenanceView } from '../components/views/MaintenanceView';
 
 interface CategoryPageProps {
   categoryId: CategoryId;
   isFavorite: (id: string) => boolean;
   onToggleFavorite: (e: React.MouseEvent, id: string) => void;
   onSelectTool: (tool: Tool) => void;
+  onNavigateCategory?: (cat: CategoryId) => void;
 }
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({
@@ -25,7 +25,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
   isFavorite,
   onToggleFavorite,
   onSelectTool,
+  onNavigateCategory,
 }) => {
+  const [targetPidForNetwork, setTargetPidForNetwork] = useState<number | null>(null);
+  const [targetPidForProcesses, setTargetPidForProcesses] = useState<number | null>(null);
+
   const category = catalogService.getCategoryById(categoryId);
   const tools = catalogService.getToolsByCategory(categoryId);
 
@@ -39,6 +43,20 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       </div>
     );
   }
+
+  const handleNavigateToNetworkWithPid = (pid: number) => {
+    setTargetPidForNetwork(pid);
+    if (onNavigateCategory) {
+      onNavigateCategory('network');
+    }
+  };
+
+  const handleNavigateToProcessPid = (pid: number) => {
+    setTargetPidForProcesses(pid);
+    if (onNavigateCategory) {
+      onNavigateCategory('processes');
+    }
+  };
 
   const renderCategorySpecialView = () => {
     switch (categoryId) {
@@ -54,13 +72,22 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
       case 'disks':
         return <StorageView />;
       case 'processes':
-        return <ProcessesView />;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <ProcessesView
+              onNavigateToNetworkWithPid={handleNavigateToNetworkWithPid}
+              initialPidFilter={targetPidForProcesses}
+            />
+            <ServicesView />
+          </div>
+        );
       case 'network':
-        return <NetworkView />;
-      case 'security':
-        return <SecurityView />;
-      case 'maintenance':
-        return <MaintenanceView />;
+        return (
+          <NetworkView
+            onNavigateToProcessPid={handleNavigateToProcessPid}
+            initialPidFilter={targetPidForNetwork}
+          />
+        );
       default:
         return null;
     }

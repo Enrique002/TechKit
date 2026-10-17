@@ -175,11 +175,35 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Visita el sitio oficial de CrystalMark para descargar la versión portable o instalable.'
   },
 
-  // Procesos y servicios
+  // Procesos y servicios (Funcional en Fase 3)
+  {
+    id: 'proc-process-manager',
+    name: 'Gestor de Procesos en Ejecución',
+    description: 'Inspecciona procesos en tiempo real, PID, consumo de CPU/Memoria, ejecutable y finalización segura con confirmación.',
+    category: 'processes',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar / Elevado según proceso',
+    keywords: ['procesos', 'PID', 'CPU', 'memoria', 'finalizar proceso', 'proceso propietario', 'ejecutable', 'detener proceso'],
+    instructions: 'Muestra procesos activos con ordenación, búsqueda y protección de procesos críticos de Windows.'
+  },
+  {
+    id: 'proc-service-manager',
+    name: 'Administrador de Servicios de Windows',
+    description: 'Consulta servicios instalados, estados reales (en ejecución, detenido), tipos de inicio y control de estado seguro.',
+    category: 'processes',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    permissions: 'Usuario estándar / Administrador',
+    keywords: ['servicios', 'estado servicio', 'iniciar servicio', 'detener servicio', 'tipo de inicio', 'sistema'],
+    instructions: 'Inspecciona el catálogo de servicios de Windows con búsqueda y filtrado por estado.'
+  },
   {
     id: 'proc-task-mgr',
-    name: 'Monitor de Procesos y Servicios TechKit',
-    description: 'Inspecciona la lista de procesos activos del sistema, uso de CPU/RAM y estado de servicios de Windows.',
+    name: 'Administrador de Tareas de Windows',
+    description: 'Acceso directo a la herramienta nativa de monitorización de procesos y rendimiento de Windows.',
     category: 'processes',
     type: 'native_techkit',
     status: 'available',
@@ -201,28 +225,39 @@ export const INITIAL_TOOLS: Tool[] = [
     instructions: 'Descarga directamente desde Microsoft Sysinternals.'
   },
 
-  // Redes y conectividad
+  // Redes y conectividad (Funcional en Fase 3)
   {
     id: 'net-ip-config',
-    name: 'Visor de Redes e Interfaces',
-    description: 'Muestra adaptadores de red activos, dirección IP, dirección MAC y tráfico enviado/recibido.',
+    name: 'Visor de Adaptadores e Interfaces de Red',
+    description: 'Consulta adaptadores activos, direcciones IPv4 e IPv6, MAC, puerta de enlace predeterminada y servidores DNS.',
     category: 'network',
     type: 'native_techkit',
     status: 'available',
     compatibility: 'Windows 10 / 11',
-    keywords: ['redes', 'direccion IP', 'ip', 'mac', 'ethernet', 'wifi', 'gateway', 'mascara'],
-    instructions: 'Permite inspeccionar interfaces de red y estado de conexión.'
+    keywords: ['redes', 'red', 'IP', 'direccion IP', 'mac', 'ethernet', 'wifi', 'gateway', 'DNS', 'conectividad'],
+    instructions: 'Muestra el estado real de conexión de las interfaces físicas y virtuales del equipo.'
   },
   {
-    id: 'net-ping-tool',
-    name: 'Diagnóstico de Latencia y Ping ICMP',
-    description: 'Ejecuta pruebas de ping a direcciones IP o nombres de dominio para verificar conectividad y latencia.',
+    id: 'net-ping-dns-tools',
+    name: 'Herramientas de Diagnóstico de Red (Ping, DNS y Ruta)',
+    description: 'Realiza pruebas de latencia (Ping ICMP), consulta resolución de nombres DNS y trazado de ruta de red.',
     category: 'network',
     type: 'native_techkit',
     status: 'available',
     compatibility: 'Windows 10 / 11',
-    keywords: ['DNS', 'direccion IP', 'redes', 'ping', 'icmp', 'conexion', 'puertos', 'latencia'],
-    instructions: 'Introduce un host o dirección IP para medir la latencia en milisegundos.'
+    keywords: ['ping', 'DNS', 'conectividad', 'latencia', 'trazado de ruta', 'traceroute', 'IP', 'red'],
+    instructions: 'Ejecuta pruebas de conectividad de red con validaciones de seguridad sin inyección de comandos.'
+  },
+  {
+    id: 'net-active-connections',
+    name: 'Conexiones Activas, Puertos e Inspector',
+    description: 'Visualiza sockets de red TCP y UDP activos, mapeo PID con procesos propietarios e inspector de puerto ocupado (1-65535).',
+    category: 'network',
+    type: 'native_techkit',
+    status: 'available',
+    compatibility: 'Windows 10 / 11',
+    keywords: ['conexiones', 'puertos', 'puerto ocupado', 'TCP', 'UDP', 'PID', 'LISTEN', 'ESTABLISHED', 'red'],
+    instructions: 'Informa sobre conexiones en escucha y establecidas asociando el PID del proceso correspondiente.'
   },
   {
     id: 'net-wireshark',
@@ -346,22 +381,21 @@ export const INITIAL_TOOLS: Tool[] = [
 ];
 
 export const POPULAR_KEYWORDS = [
-  'procesador',
-  'cpu',
-  'memoria',
-  'RAM',
-  'almacenamiento',
-  'disco',
-  'unidades',
-  'espacio libre',
-  'sistema operativo',
   'procesos',
+  'PID',
+  'CPU',
+  'memoria',
   'servicios',
-  'redes',
-  'direccion IP',
+  'conexiones',
+  'puertos',
+  'puerto ocupado',
+  'red',
+  'IP',
+  'DNS',
   'ping',
-  'hash',
-  'sha256',
-  'limpieza',
-  'errores de Windows'
+  'conectividad',
+  'TCP',
+  'UDP',
+  'almacenamiento',
+  'sistema operativo'
 ];
