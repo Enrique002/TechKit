@@ -33,20 +33,23 @@ export const PerformanceView: React.FC = () => {
 
   const maxHistoryLength = 30; // 30 datapoints graph
 
+  // Fetch static GPU metadata once on load to avoid spawning processes every tick
+  useEffect(() => {
+    systemService.getGpuInfo().then((gpuData) => setGpu(gpuData)).catch(() => {});
+  }, []);
+
   const fetchData = async () => {
     try {
-      const [cpuData, memData, diskData, gpuData, sumData] = await Promise.all([
+      const [cpuData, memData, diskData, sumData] = await Promise.all([
         systemService.getCpuInfo(),
         systemService.getMemoryInfo(),
         systemService.getDiskInfo(),
-        systemService.getGpuInfo(),
         systemService.getSystemSummary(),
       ]);
 
       setCpu(cpuData);
       setMemory(memData);
       setDisks(diskData);
-      setGpu(gpuData);
       setSummary(sumData);
 
       // Create snapshot
@@ -57,7 +60,7 @@ export const PerformanceView: React.FC = () => {
         diskUsage: diskData[0]?.usagePercentage || 0,
         networkUploadBps: 1024 * (Math.floor(Math.random() * 50) + 10), // mock dynamic network rate
         networkDownloadBps: 1024 * (Math.floor(Math.random() * 400) + 50),
-        gpuUsage: gpuData.usagePercentage,
+        gpuUsage: gpu?.usagePercentage || 0,
       };
 
       setSnapshots((prev) => [...prev.slice(-maxHistoryLength + 1), newSnapshot]);
