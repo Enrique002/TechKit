@@ -1,0 +1,47 @@
+name: TechKit CI & Windows Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows Application (.exe / .msi)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build Frontend
+        run: npm run build
+
+      - name: Build Tauri Desktop App
+        run: npm run tauri build
+
+      - name: Upload Windows Executables & Installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: TechKit-Windows-v1.0.0
+          path: |
+            src-tauri/target/release/techkit.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe

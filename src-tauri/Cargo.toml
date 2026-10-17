@@ -1,12 +1,12 @@
 [package]
-name = "app"
-version = "0.2.0"
-description = "TechKit Desktop Application"
-authors = ["you"]
-license = ""
+name = "techkit"
+version = "1.0.0"
+description = "TechKit Desktop Application for IT Technicians"
+authors = ["TechKit Team"]
+license = "MIT"
 repository = ""
-edition = "2024"
-rust-version = "1.90"
+edition = "2021"
+rust-version = "1.77"
 
 [lib]
 name = "app_lib"

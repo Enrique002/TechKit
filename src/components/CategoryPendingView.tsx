@@ -27,11 +27,11 @@ export const CategoryPendingView: React.FC<CategoryPendingViewProps> = ({ catego
           borderColor: 'var(--border-color)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#faad14', fontWeight: 600, marginBottom: '6px' }}>
-          <Clock size={16} /> Estado del desarrollo (Fase 2)
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '6px' }}>
+          <Clock size={16} /> Estado del desarrollo (Fase 5 Final)
         </div>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Esta categoría cuenta con su estructura preparada. En las fases 3, 4 y 5 se incorporarán las utilidades de red, gestión de procesos y seguridad.
+          Esta categoría cuenta con su estructura preparada y enlaces oficiales seleccionados.
         </p>
       </div>
     </div>

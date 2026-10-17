@@ -1,4 +1,4 @@
-# TechKit
+# TechKit — Kit de Herramientas para Técnicos Informáticos
 
 **Estado: en desarrollo. Fase 3 de 5.**
 
@@ -6,7 +6,7 @@ TechKit es una aplicación de escritorio diseñada para técnicos informáticos 
 
 ---
 
-## 🚀 Objetivo del Proyecto
+## 📐 Rediseño Visual Rectilíneo (Fase 5)
 
 El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e inspección de equipos mediante:
 - Un **buscador global** de herramientas, comandos y palabras clave habituales.
@@ -20,12 +20,12 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **React 19**: Biblioteca para la construcción de la interfaz gráfica interactiva.
-- **TypeScript 5**: Tipado estático para garantizar solidez en los modelos de datos y servicios.
-- **Vite 6**: Herramienta de compilación rápida y servidor de desarrollo.
-- **Tauri 2 / Rust**: Motor de escritorio nativo con integración de comandos en Rust utilizando la crate `sysinfo` (`src-tauri/`).
-- **Lucide React**: Conjunto de iconos vectoriales modernos y consistentes.
-- **Vitest & Testing Library**: Entorno de pruebas unitarias e integración de componentes.
+- **React 19**: Construcción de la interfaz gráfica interactiva.
+- **TypeScript 5**: Tipado estático y solidez en modelos de datos.
+- **Vite 6**: Servidor de desarrollo y empaquetador ultrarrápido.
+- **Tauri 2 / Rust**: Motor nativo de escritorio con comandos optimizados utilizando las crates `sysinfo` y `serde`.
+- **Lucide React**: Conjunto de iconos vectoriales limpios y geométricos.
+- **Vitest & Testing Library**: Suite de 22 pruebas automatizadas.
 
 ---
 
@@ -59,7 +59,11 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
    - Buscador e Inspector de Puerto específico (validación de rango 1 - 65535) con explicación didáctica sobre puertos en escucha vs conexiones establecidas.
    - **Navegación cruzada bidireccional:** Enlace directo desde una conexión o puerto hacia el proceso correspondiente en el Gestor de Procesos mediante el PID, conservando el contexto.
 
----
+1. **Estructura y Navegación (Fase 1)**:
+   - Navegación lateral por categorías técnicas y accesos rápidos.
+   - Buscador global por palabras clave, comandos y categorías.
+   - Sistema de **Favoritos** e **Historial Reciente** con persistencia en `localStorage`.
+   - Selector de tema claro / oscuro y restablecimiento de preferencias.
 
 ## 📁 Estructura del Proyecto
 
@@ -85,10 +89,9 @@ El objetivo de TechKit es agilizar las tareas diarias de soporte técnico e insp
 
 ---
 
-## ⚙️ Comandos de Ejecución
+## ⚙️ Comandos de Desarrollo y Pruebas
 
-### Modo Desarrollo (Frontend Vite)
-Para ejecutar la interfaz en el navegador o entorno web de desarrollo:
+### Modo Desarrollo (Vite Frontend)
 ```bash
 npm run dev
 ```
@@ -99,10 +102,14 @@ Para ejecutar la suite completa de 24 pruebas unitarias e integración con Vites
 npm test
 ```
 
-### Compilar para Producción (Bundle Frontend)
-Comprueba el tipado de TypeScript y genera el bundle optimizado en `dist/`:
+### Compilar Frontend para Producción
 ```bash
 npm run build
+```
+
+### Compilar Aplicación Nativa con Tauri (requiere entorno Windows)
+```bash
+npm run tauri build
 ```
 
 ---
@@ -114,7 +121,7 @@ npm run build
 
 ---
 
-## 📋 Plan de Fases Futuras
+## ⚠️ NOTA SOBRE EL ENTORNO SANDBOX LINUX Y WINDOWS
 
 - [x] **Fase 1:** Estructura e interfaz inicial, catálogo, buscador global, favoritos, historial y configuración.
 - [x] **Fase 2:** Integración nativa de consulta de información real del sistema, procesador, memoria RAM y almacenamiento.

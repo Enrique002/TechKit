@@ -85,7 +85,7 @@ export const CpuView: React.FC = () => {
                   {cpu.globalUsagePercentage.toFixed(1)}%
                 </span>
               </div>
-              <div style={{ height: '10px', backgroundColor: 'var(--bg-primary)', borderRadius: '5px', overflow: 'hidden' }}>
+              <div style={{ height: '10px', backgroundColor: 'var(--bg-primary)', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                 <div
                   style={{
                     height: '100%',

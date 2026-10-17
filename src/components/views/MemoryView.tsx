@@ -81,7 +81,7 @@ export const MemoryView: React.FC = () => {
               </span>
             </div>
 
-            <div style={{ height: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: '6px', overflow: 'hidden' }}>
+            <div style={{ height: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: 0, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
               <div
                 style={{
                   height: '100%',
