@@ -1,6 +1,10 @@
 import { CategoryId, CategoryInfo, Tool } from '../types';
 import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
+// Module-level cache for mapped tools to avoid re-mapping and re-allocating
+// external tool objects on every call to catalogService functions.
+let cachedAllTools: Tool[] | null = null;
+
 export const catalogService = {
   getCategories(): CategoryInfo[] {
     return CATEGORIES;
@@ -15,6 +19,11 @@ export const catalogService = {
   },
 
   getAllTools(): Tool[] {
+    // ⚡ Bolt Optimization: Cache mapped tool objects to prevent redundant memory allocations and GC overhead
+    if (cachedAllTools) {
+      return cachedAllTools;
+    }
+
     const nativeTools = INITIAL_TOOLS;
     const externalTools: Tool[] = EXTERNAL_TOOLS_CATALOG.map((ext) => ({
       id: ext.id,
@@ -31,7 +40,8 @@ export const catalogService = {
       externalDetails: ext,
     }));
 
-    return [...nativeTools, ...externalTools];
+    cachedAllTools = [...nativeTools, ...externalTools];
+    return cachedAllTools;
   },
 
   getExternalTools(): Tool[] {

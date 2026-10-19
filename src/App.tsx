@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CategoryId, Tool, UserSettings } from './types';
 import { catalogService } from './services/catalogService';
 import { storageService } from './services/storageService';
@@ -99,17 +99,27 @@ export const App: React.FC = () => {
 
   const isFavorite = (toolId: string) => favorites.includes(toolId);
 
-  // Compute favorite & recent Tool objects
-  const allTools = catalogService.getAllTools();
-  const favoriteTools = allTools.filter((t) => favorites.includes(t.id));
-  const recentTools = recentToolIds
-    .map((id) => allTools.find((t) => t.id === id))
-    .filter((t): t is Tool => Boolean(t));
+  // ⚡ Bolt Optimization: Memoize favorite, recent, and search tool lookups
+  const allTools = useMemo(() => catalogService.getAllTools(), []);
+
+  const favoriteTools = useMemo(
+    () => allTools.filter((t) => favorites.includes(t.id)),
+    [allTools, favorites]
+  );
+
+  const recentTools = useMemo(
+    () =>
+      recentToolIds
+        .map((id) => allTools.find((t) => t.id === id))
+        .filter((t): t is Tool => Boolean(t)),
+    [allTools, recentToolIds]
+  );
 
   // Search results calculation
-  const searchResults = searchQuery.trim().length > 0
-    ? catalogService.searchTools({ query: searchQuery })
-    : [];
+  const searchResults = useMemo(
+    () => (searchQuery.trim().length > 0 ? catalogService.searchTools({ query: searchQuery }) : []),
+    [searchQuery]
+  );
 
   const renderCurrentView = () => {
     if (searchQuery.trim().length > 0) {
