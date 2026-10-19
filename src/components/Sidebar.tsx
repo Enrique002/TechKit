@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Home,
   Activity,
@@ -49,7 +49,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   favoriteCount,
   recentCount,
 }) => {
-  const categories = catalogService.getCategories();
+  const categories = useMemo(() => catalogService.getCategories(), []);
+
+  // ⚡ Bolt Optimization: Pre-calculate category tool counts with useMemo to avoid repeated filter passes on render
+  const categoryToolCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const cat of categories) {
+      if (!cat.isMainSection) {
+        counts[cat.id] = catalogService.getToolsByCategory(cat.id).length;
+      }
+    }
+    return counts;
+  }, [categories]);
 
   const renderIcon = (iconName: string) => {
     const IconComponent = ICON_MAP[iconName] || Terminal;
@@ -99,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="nav-section-title">Suite de Herramientas</div>
         {mainCategories.map((cat) => {
           const isActive = activeCategory === cat.id;
-          const toolCount = catalogService.getToolsByCategory(cat.id).length;
+          const toolCount = categoryToolCounts[cat.id] || 0;
 
           return (
             <button
