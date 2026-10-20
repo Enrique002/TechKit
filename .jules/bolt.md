@@ -1,0 +1,3 @@
+## 2025-05-20 - Static Data Transformation Caching in Service Layer
+**Learning:** Service layer methods like `getAllTools()` or `getToolsByCategory()` that map raw data array assets into UI model objects can be invoked dozens of times per render cycle (e.g. `Sidebar` rendering item badges for every category). Unmemoized transformations create hundreds of transient objects, string concatenations, and array allocations per render frame.
+**Action:** Always lazy-cache static data model transformations in singleton services and index entities in a `Map` for O(1) key lookups instead of doing repeated array scans (`.find()`).
