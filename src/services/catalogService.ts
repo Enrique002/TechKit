@@ -1,6 +1,10 @@
 import { CategoryId, CategoryInfo, Tool } from '../types';
 import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
+// Module-level cache for mapped tool entries to avoid re-mapping static catalog data on every invocation.
+// Expected impact: Reduces object allocations and string formatting overhead from O(N) per call to O(1) cached access.
+let cachedAllTools: Tool[] | null = null;
+
 export const catalogService = {
   getCategories(): CategoryInfo[] {
     return CATEGORIES;
@@ -15,23 +19,27 @@ export const catalogService = {
   },
 
   getAllTools(): Tool[] {
-    const nativeTools = INITIAL_TOOLS;
-    const externalTools: Tool[] = EXTERNAL_TOOLS_CATALOG.map((ext) => ({
-      id: ext.id,
-      name: ext.name,
-      description: ext.shortDescription,
-      category: ext.category,
-      type: 'external_app',
-      status: ext.installationStatus === 'installed' ? 'available' : 'requires_download',
-      compatibility: ext.windowsCompatibility,
-      permissions: ext.requiresAdmin ? 'Administrador requerido' : 'Usuario estándar',
-      officialUrl: ext.officialUrl,
-      keywords: [ext.name, ext.categoryDisplayName, ext.licenseType, ...ext.mainFeatures, ...ext.solvesProblems],
-      instructions: `Tipo de Licencia: ${ext.licenseType}\nFunciones Principales: ${ext.mainFeatures.join(', ')}\nProblemas que resuelve: ${ext.solvesProblems.join(', ')}\n${ext.warnings ? `\nAdvertencia: ${ext.warnings}` : ''}`,
-      externalDetails: ext,
-    }));
+    if (!cachedAllTools) {
+      const nativeTools = INITIAL_TOOLS;
+      const externalTools: Tool[] = EXTERNAL_TOOLS_CATALOG.map((ext) => ({
+        id: ext.id,
+        name: ext.name,
+        description: ext.shortDescription,
+        category: ext.category,
+        type: 'external_app',
+        status: ext.installationStatus === 'installed' ? 'available' : 'requires_download',
+        compatibility: ext.windowsCompatibility,
+        permissions: ext.requiresAdmin ? 'Administrador requerido' : 'Usuario estándar',
+        officialUrl: ext.officialUrl,
+        keywords: [ext.name, ext.categoryDisplayName, ext.licenseType, ...ext.mainFeatures, ...ext.solvesProblems],
+        instructions: `Tipo de Licencia: ${ext.licenseType}\nFunciones Principales: ${ext.mainFeatures.join(', ')}\nProblemas que resuelve: ${ext.solvesProblems.join(', ')}\n${ext.warnings ? `\nAdvertencia: ${ext.warnings}` : ''}`,
+        externalDetails: ext,
+      }));
 
-    return [...nativeTools, ...externalTools];
+      cachedAllTools = [...nativeTools, ...externalTools];
+    }
+
+    return cachedAllTools;
   },
 
   getExternalTools(): Tool[] {
