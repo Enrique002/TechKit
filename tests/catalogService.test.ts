@@ -27,4 +27,12 @@ describe('catalogService Phase 2', () => {
     const storageResults = catalogService.searchTools({ query: 'almacenamiento' });
     expect(storageResults.some((t) => t.id === 'disk-storage-checker')).toBe(true);
   });
+
+  it('caches getAllTools() array instance across multiple calls', () => {
+    const toolsFirstCall = catalogService.getAllTools();
+    const toolsSecondCall = catalogService.getAllTools();
+
+    expect(toolsFirstCall).toBe(toolsSecondCall);
+    expect(toolsFirstCall.length).toBeGreaterThan(0);
+  });
 });
