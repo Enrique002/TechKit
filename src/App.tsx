@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CategoryId, Tool, UserSettings } from './types';
 import { catalogService } from './services/catalogService';
 import { storageService } from './services/storageService';
@@ -97,19 +97,28 @@ export const App: React.FC = () => {
     setRecentToolIds([]);
   };
 
-  const isFavorite = (toolId: string) => favorites.includes(toolId);
+  const favoritesSet = useMemo(() => new Set(favorites), [favorites]);
+  const isFavorite = useCallback((toolId: string) => favoritesSet.has(toolId), [favoritesSet]);
 
-  // Compute favorite & recent Tool objects
-  const allTools = catalogService.getAllTools();
-  const favoriteTools = allTools.filter((t) => favorites.includes(t.id));
-  const recentTools = recentToolIds
-    .map((id) => allTools.find((t) => t.id === id))
-    .filter((t): t is Tool => Boolean(t));
+  // Memoized computations using Set and O(1) Map lookups to avoid re-scanning full catalog on every render.
+  const favoriteTools = useMemo(
+    () => catalogService.getAllTools().filter((t) => favoritesSet.has(t.id)),
+    [favoritesSet]
+  );
 
-  // Search results calculation
-  const searchResults = searchQuery.trim().length > 0
-    ? catalogService.searchTools({ query: searchQuery })
-    : [];
+  const recentTools = useMemo(
+    () =>
+      recentToolIds
+        .map((id) => catalogService.getToolById(id))
+        .filter((t): t is Tool => Boolean(t)),
+    [recentToolIds]
+  );
+
+  // Search results calculation memoized by search query
+  const searchResults = useMemo(
+    () => (searchQuery.trim().length > 0 ? catalogService.searchTools({ query: searchQuery }) : []),
+    [searchQuery]
+  );
 
   const renderCurrentView = () => {
     if (searchQuery.trim().length > 0) {
