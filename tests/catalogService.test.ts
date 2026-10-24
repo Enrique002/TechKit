@@ -35,4 +35,13 @@ describe('catalogService Phase 2', () => {
     expect(toolsFirstCall).toBe(toolsSecondCall);
     expect(toolsFirstCall.length).toBeGreaterThan(0);
   });
+
+  it('retrieves tools via O(1) Map lookup accurately', () => {
+    const allTools = catalogService.getAllTools();
+    for (const tool of allTools) {
+      const retrieved = catalogService.getToolById(tool.id);
+      expect(retrieved).toBe(tool);
+    }
+    expect(catalogService.getToolById('non-existent-tool-id')).toBeUndefined();
+  });
 });

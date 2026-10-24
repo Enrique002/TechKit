@@ -1,9 +1,10 @@
 import { CategoryId, CategoryInfo, Tool } from '../types';
 import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
-// Module-level cache for mapped tool entries to avoid re-mapping static catalog data on every invocation.
-// Expected impact: Reduces object allocations and string formatting overhead from O(N) per call to O(1) cached access.
+// Module-level cache for mapped tool entries and Map index to avoid re-mapping catalog data or doing linear scans on lookup.
+// Expected impact: Reduces tool lookup from O(N) array search down to O(1) Map hash lookup.
 let cachedAllTools: Tool[] | null = null;
+let cachedToolsMap: Map<string, Tool> | null = null;
 
 export const catalogService = {
   getCategories(): CategoryInfo[] {
@@ -15,7 +16,10 @@ export const catalogService = {
   },
 
   getToolById(id: string): Tool | undefined {
-    return this.getAllTools().find((t) => t.id === id);
+    if (!cachedToolsMap) {
+      this.getAllTools();
+    }
+    return cachedToolsMap?.get(id);
   },
 
   getAllTools(): Tool[] {
@@ -37,6 +41,7 @@ export const catalogService = {
       }));
 
       cachedAllTools = [...nativeTools, ...externalTools];
+      cachedToolsMap = new Map(cachedAllTools.map((t) => [t.id, t]));
     }
 
     return cachedAllTools;
