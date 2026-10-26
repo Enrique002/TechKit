@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WindowsServiceInfo } from '../../types';
 import { windowServicesService } from '../../services/windowServicesService';
 import { RefreshCw, Search, ShieldAlert, AlertTriangle, Info, Play, Square, X } from 'lucide-react';
@@ -69,30 +69,33 @@ export const ServicesView: React.FC = () => {
     }
   };
 
-  const filteredServices = services
-    .filter((s) => {
-      const query = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        query === '' ||
-        s.name.toLowerCase().includes(query) ||
-        s.displayName.toLowerCase().includes(query) ||
-        s.description.toLowerCase().includes(query);
+  // Memoize filtered and sorted services computation to avoid recalculating string comparisons on unrelated re-renders
+  const filteredServices = useMemo(() => {
+    return services
+      .filter((s) => {
+        const query = searchTerm.toLowerCase().trim();
+        const matchesSearch =
+          query === '' ||
+          s.name.toLowerCase().includes(query) ||
+          s.displayName.toLowerCase().includes(query) ||
+          s.description.toLowerCase().includes(query);
 
-      if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
 
-      if (statusFilter === 'running') return s.status === 'Running';
-      if (statusFilter === 'stopped') return s.status === 'Stopped';
+        if (statusFilter === 'running') return s.status === 'Running';
+        if (statusFilter === 'stopped') return s.status === 'Stopped';
 
-      return true;
-    })
-    .sort((a, b) => {
-      let compA = a[sortBy].toLowerCase();
-      let compB = b[sortBy].toLowerCase();
+        return true;
+      })
+      .sort((a, b) => {
+        let compA = a[sortBy].toLowerCase();
+        let compB = b[sortBy].toLowerCase();
 
-      if (compA < compB) return sortOrder === 'asc' ? -1 : 1;
-      if (compA > compB) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+        if (compA < compB) return sortOrder === 'asc' ? -1 : 1;
+        if (compA > compB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [services, searchTerm, statusFilter, sortBy, sortOrder]);
 
   return (
     <div className="card-panel">
