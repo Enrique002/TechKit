@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   NetworkInterfaceInfo,
   PingResult,
@@ -133,31 +133,38 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
     setIsTracing(false);
   };
 
-  // Filter Active Connections
-  const filteredConnections = connections.filter((c) => {
-    if (protocolFilter !== 'ALL' && c.protocol !== protocolFilter) return false;
-    if (stateFilter !== 'ALL' && c.state !== stateFilter) return false;
+  // Optimization: Memoize active network connections list filtering.
+  // Expected impact: Prevents array re-filtering when typing or triggering Ping/DNS/Trace diagnostic tools.
+  const filteredConnections = useMemo(() => {
+    return connections.filter((c) => {
+      if (protocolFilter !== 'ALL' && c.protocol !== protocolFilter) return false;
+      if (stateFilter !== 'ALL' && c.state !== stateFilter) return false;
 
-    const query = connSearch.toLowerCase().trim();
-    if (!query) return true;
+      const query = connSearch.toLowerCase().trim();
+      if (!query) return true;
 
-    return (
-      c.localPort.toString().includes(query) ||
-      c.remotePort.toString().includes(query) ||
-      c.localAddress.toLowerCase().includes(query) ||
-      c.remoteAddress.toLowerCase().includes(query) ||
-      c.pid.toString().includes(query) ||
-      (c.processName && c.processName.toLowerCase().includes(query))
-    );
-  });
+      return (
+        c.localPort.toString().includes(query) ||
+        c.remotePort.toString().includes(query) ||
+        c.localAddress.toLowerCase().includes(query) ||
+        c.remoteAddress.toLowerCase().includes(query) ||
+        c.pid.toString().includes(query) ||
+        (c.processName && c.processName.toLowerCase().includes(query))
+      );
+    });
+  }, [connections, protocolFilter, stateFilter, connSearch]);
 
   // Port Inspector Filtered Items
   const inspectedPortNumber = parseInt(inspectPortInput.trim(), 10);
   const isValidPort = !isNaN(inspectedPortNumber) && inspectedPortNumber >= 1 && inspectedPortNumber <= 65535;
 
-  const portMatches = isValidPort
-    ? connections.filter((c) => c.localPort === inspectedPortNumber || c.remotePort === inspectedPortNumber)
-    : [];
+  // Optimization: Memoize inspected port connection matches.
+  // Expected impact: Prevents scanning all connection objects when switching active tabs or interacting with ping/dns state.
+  const portMatches = useMemo(() => {
+    return isValidPort
+      ? connections.filter((c) => c.localPort === inspectedPortNumber || c.remotePort === inspectedPortNumber)
+      : [];
+  }, [isValidPort, inspectedPortNumber, connections]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

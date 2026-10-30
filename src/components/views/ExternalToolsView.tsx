@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Download, ExternalLink, Shield, Search } from 'lucide-react';
 import { catalogService } from '../../services/catalogService';
 import { urlService } from '../../services/urlService';
@@ -16,20 +16,26 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
   const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>(selectedCategoryFilter);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const allExternal = catalogService.getExternalTools();
+  // Optimization: Memoize external tools array fetch from catalog service.
+  // Expected impact: Eliminates calling catalogService.getExternalTools() on every render pass.
+  const allExternal = useMemo(() => catalogService.getExternalTools(), []);
 
-  const filteredTools = allExternal.filter((t) => {
-    if (filterCategory !== 'all' && t.category !== filterCategory) return false;
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        t.name.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.keywords.some((k) => k.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  // Optimization: Memoize external tools filtering.
+  // Expected impact: Prevents redundant O(N) array filtering and string searches across catalog tools on parent re-renders.
+  const filteredTools = useMemo(() => {
+    return allExternal.filter((t) => {
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+      if (searchQuery.trim().length > 0) {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.keywords.some((k) => k.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [allExternal, filterCategory, searchQuery]);
 
   const handleOpenUrl = async (e: React.MouseEvent, url?: string) => {
     e.stopPropagation();
