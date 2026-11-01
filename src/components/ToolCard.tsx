@@ -9,7 +9,10 @@ interface ToolCardProps {
   onSelectTool: (tool: Tool) => void;
 }
 
-export const ToolCard: React.FC<ToolCardProps> = ({
+// Optimization: Wrap ToolCard with React.memo to prevent unnecessary re-renders of cards in lists/grids
+// when unrelated parent state updates (such as metrics polling, active view switching, or modal open/close).
+// Expected impact: Eliminates redundant DOM diffing and re-renders for up to tens of cards per render cycle.
+export const ToolCard: React.FC<ToolCardProps> = React.memo(({
   tool,
   isFavorite,
   onToggleFavorite,
@@ -66,4 +69,6 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ToolCard.displayName = 'ToolCard';

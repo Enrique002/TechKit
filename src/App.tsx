@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CategoryId, Tool, UserSettings } from './types';
 import { catalogService } from './services/catalogService';
 import { storageService } from './services/storageService';
@@ -58,7 +58,9 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleToggleFavorite = (e?: React.MouseEvent | string, toolIdArg?: string) => {
+  // Optimization: Memoize action handlers to preserve reference identity across re-renders.
+  // Expected impact: Allows memoized children (like ToolCard) to skip re-renders when parent re-renders.
+  const handleToggleFavorite = useCallback((e?: React.MouseEvent | string, toolIdArg?: string) => {
     let id: string;
     if (typeof e === 'string') {
       id = e;
@@ -71,14 +73,14 @@ export const App: React.FC = () => {
 
     storageService.toggleFavorite(id);
     setFavorites(storageService.getFavorites());
-  };
+  }, []);
 
-  const handleSelectTool = (tool: Tool) => {
+  const handleSelectTool = useCallback((tool: Tool) => {
     setSelectedTool(tool);
     setIsModalOpen(true);
     storageService.addRecent(tool.id);
     setRecentToolIds(storageService.getRecent().map((r) => r.toolId));
-  };
+  }, []);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -129,7 +131,7 @@ export const App: React.FC = () => {
           query={searchQuery}
           searchResults={searchResults}
           isFavorite={isFavorite}
-          onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
+          onToggleFavorite={handleToggleFavorite}
           onSelectTool={handleSelectTool}
           onClearSearch={handleClearSearch}
           onSearchKeyword={handleSearchKeyword}
@@ -144,7 +146,7 @@ export const App: React.FC = () => {
             favoriteTools={favoriteTools}
             recentTools={recentTools}
             isFavorite={isFavorite}
-            onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
+            onToggleFavorite={handleToggleFavorite}
             onSelectTool={handleSelectTool}
             onNavigateCategory={(cat) => setActiveCategory(cat)}
             onSearchKeyword={handleSearchKeyword}
@@ -156,7 +158,7 @@ export const App: React.FC = () => {
           <FavoritesPage
             favoriteTools={favoriteTools}
             isFavorite={isFavorite}
-            onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
+            onToggleFavorite={handleToggleFavorite}
             onSelectTool={handleSelectTool}
             onExploreCatalog={() => setActiveCategory('hardware')}
           />
@@ -167,7 +169,7 @@ export const App: React.FC = () => {
           <RecentPage
             recentTools={recentTools}
             isFavorite={isFavorite}
-            onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
+            onToggleFavorite={handleToggleFavorite}
             onSelectTool={handleSelectTool}
             onClearRecent={handleClearRecent}
             onExploreCatalog={() => setActiveCategory('home')}
@@ -188,7 +190,7 @@ export const App: React.FC = () => {
           <CategoryPage
             categoryId={activeCategory}
             isFavorite={isFavorite}
-            onToggleFavorite={(e, id) => handleToggleFavorite(e, id)}
+            onToggleFavorite={handleToggleFavorite}
             onSelectTool={handleSelectTool}
             onNavigateCategory={(cat) => setActiveCategory(cat)}
           />
