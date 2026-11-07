@@ -35,4 +35,37 @@ describe('catalogService Phase 2', () => {
     expect(toolsFirstCall).toBe(toolsSecondCall);
     expect(toolsFirstCall.length).toBeGreaterThan(0);
   });
+
+  it('provides O(1) cached category and external tool arrays with referential stability', () => {
+    // getToolsByCategory
+    const hwFirst = catalogService.getToolsByCategory('hardware');
+    const hwSecond = catalogService.getToolsByCategory('hardware');
+    expect(hwFirst).toBe(hwSecond);
+    expect(hwFirst.length).toBeGreaterThan(0);
+
+    // getExternalTools
+    const extFirst = catalogService.getExternalTools();
+    const extSecond = catalogService.getExternalTools();
+    expect(extFirst).toBe(extSecond);
+    expect(extFirst.length).toBeGreaterThan(0);
+
+    // getExternalToolsByCategory
+    const extNetFirst = catalogService.getExternalToolsByCategory('network');
+    const extNetSecond = catalogService.getExternalToolsByCategory('network');
+    expect(extNetFirst).toBe(extNetSecond);
+
+    // getToolById O(1) map lookup
+    const tool = catalogService.getToolById('hw-cpu-info');
+    expect(tool?.name).toBe('Información del Procesador (CPU)');
+
+    const nonExistent = catalogService.getToolById('non-existent-tool-id');
+    expect(nonExistent).toBeUndefined();
+
+    // getCategoryById O(1) map lookup
+    const cat = catalogService.getCategoryById('hardware');
+    expect(cat?.name).toBe('Sistema y Hardware');
+
+    const nonExistentCat = catalogService.getCategoryById('unknown-cat' as any);
+    expect(nonExistentCat).toBeUndefined();
+  });
 });
