@@ -1,9 +1,18 @@
 import { CategoryId, CategoryInfo, Tool } from '../types';
 import { CATEGORIES, INITIAL_TOOLS, EXTERNAL_TOOLS_CATALOG } from '../data/toolsData';
 
-// Module-level cache for mapped tool entries to avoid re-mapping static catalog data on every invocation.
-// Expected impact: Reduces object allocations and string formatting overhead from O(N) per call to O(1) cached access.
+// Module-level caches and lookup maps for catalog data.
+// Expected impact: Replaces repetitive O(N) array scans, allocations, and filter closures
+// in hot rendering paths (Sidebar badge computation, CategoryPage renders, ExternalToolsView)
+// with O(1) indexed Map and pre-grouped category array references.
 let cachedAllTools: Tool[] | null = null;
+let cachedToolMap: Map<string, Tool> | null = null;
+let cachedCategoriesById: Map<CategoryId, CategoryInfo> | null = null;
+let cachedToolsByCategory: Map<CategoryId, Tool[]> | null = null;
+let cachedExternalTools: Tool[] | null = null;
+let cachedExternalToolsByCategory: Map<CategoryId, Tool[]> | null = null;
+
+const EMPTY_TOOL_ARRAY: Tool[] = [];
 
 export const catalogService = {
   getCategories(): CategoryInfo[] {
@@ -11,11 +20,17 @@ export const catalogService = {
   },
 
   getCategoryById(id: CategoryId): CategoryInfo | undefined {
-    return CATEGORIES.find((c) => c.id === id);
+    if (!cachedCategoriesById) {
+      cachedCategoriesById = new Map(CATEGORIES.map((c) => [c.id, c]));
+    }
+    return cachedCategoriesById.get(id);
   },
 
   getToolById(id: string): Tool | undefined {
-    return this.getAllTools().find((t) => t.id === id);
+    if (!cachedToolMap) {
+      this.getAllTools();
+    }
+    return cachedToolMap?.get(id);
   },
 
   getAllTools(): Tool[] {
@@ -36,30 +51,70 @@ export const catalogService = {
         externalDetails: ext,
       }));
 
-      cachedAllTools = [...nativeTools, ...externalTools];
+      const all = [...nativeTools, ...externalTools];
+      cachedAllTools = all;
+
+      // Build O(1) ID map and category partitions in a single O(N) pass during initial load
+      const toolMap = new Map<string, Tool>();
+      const byCategory = new Map<CategoryId, Tool[]>();
+      const externalList: Tool[] = [];
+      const externalByCategory = new Map<CategoryId, Tool[]>();
+
+      for (const tool of all) {
+        toolMap.set(tool.id, tool);
+
+        let catList = byCategory.get(tool.category);
+        if (!catList) {
+          catList = [];
+          byCategory.set(tool.category, catList);
+        }
+        catList.push(tool);
+
+        if (tool.type === 'external_app' && tool.externalDetails) {
+          externalList.push(tool);
+
+          let extCatList = externalByCategory.get(tool.category);
+          if (!extCatList) {
+            extCatList = [];
+            externalByCategory.set(tool.category, extCatList);
+          }
+          extCatList.push(tool);
+        }
+      }
+
+      cachedToolMap = toolMap;
+      cachedToolsByCategory = byCategory;
+      cachedExternalTools = externalList;
+      cachedExternalToolsByCategory = externalByCategory;
     }
 
     return cachedAllTools;
   },
 
   getExternalTools(): Tool[] {
-    return this.getAllTools().filter((t) => t.type === 'external_app' && Boolean(t.externalDetails));
+    if (!cachedExternalTools) {
+      this.getAllTools();
+    }
+    return cachedExternalTools || EMPTY_TOOL_ARRAY;
   },
 
   getExternalToolsByCategory(category: CategoryId): Tool[] {
-    return this.getExternalTools().filter((t) => t.category === category);
+    if (!cachedExternalToolsByCategory) {
+      this.getAllTools();
+    }
+    return cachedExternalToolsByCategory?.get(category) || EMPTY_TOOL_ARRAY;
   },
 
   getToolsByCategory(category: CategoryId): Tool[] {
-    return this.getAllTools().filter((t) => t.category === category);
+    if (!cachedToolsByCategory) {
+      this.getAllTools();
+    }
+    return cachedToolsByCategory?.get(category) || EMPTY_TOOL_ARRAY;
   },
 
   searchTools(options: { query?: string; category?: CategoryId; type?: string }): Tool[] {
-    let tools = this.getAllTools();
-
-    if (options.category) {
-      tools = tools.filter((t) => t.category === options.category);
-    }
+    // If a category is requested, start directly from the indexed category bucket instead of scanning all tools
+    let tools = options.category ? this.getToolsByCategory(options.category) : this.getAllTools();
 
     if (options.type) {
       tools = tools.filter((t) => t.type === options.type);
