@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ProcessInfo } from '../../types';
 import { processService } from '../../services/processService';
 import { formatBytes } from '../../services/systemService';
@@ -170,37 +170,57 @@ export const ProcessesView: React.FC<ProcessesViewProps> = ({
     window.open(`https://www.google.com/search?q=${query}`, '_blank', 'noopener,noreferrer');
   };
 
-  const filteredProcesses = processes
-    .filter((p) => {
-      const query = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        query === '' ||
-        p.name.toLowerCase().includes(query) ||
-        p.pid.toString().includes(query) ||
-        p.user.toLowerCase().includes(query) ||
-        p.exePath.toLowerCase().includes(query);
+  // Optimization: Memoize filtered and sorted process list.
+  // Expected impact: Eliminates redundant O(N) multi-field string matching and O(N log N) sorting
+  // whenever unrelated component state changes (e.g. selection modals, loading flags, action notifications).
+  const filteredProcesses = useMemo(() => {
+    const query = searchTerm.toLowerCase().trim();
 
-      if (!matchesSearch) return false;
+    return processes
+      .filter((p) => {
+        const matchesSearch =
+          query === '' ||
+          p.name.toLowerCase().includes(query) ||
+          p.pid.toString().includes(query) ||
+          p.user.toLowerCase().includes(query) ||
+          p.exePath.toLowerCase().includes(query);
 
-      if (filterType === 'high_resource') return p.cpuUsagePercentage > 15 || p.memoryBytes > 300 * 1024 * 1024;
-      if (filterType === 'user') return !p.isCritical && !p.user.includes('SYSTEM');
-      if (filterType === 'system') return p.isCritical || p.user.includes('SYSTEM');
+        if (!matchesSearch) return false;
 
-      return true;
-    })
-    .sort((a, b) => {
-      let compA: any = a[sortBy === 'cpu' ? 'cpuUsagePercentage' : sortBy === 'memory' ? 'memoryBytes' : sortBy === 'threads' ? 'threadsCount' : sortBy];
-      let compB: any = b[sortBy === 'cpu' ? 'cpuUsagePercentage' : sortBy === 'memory' ? 'memoryBytes' : sortBy === 'threads' ? 'threadsCount' : sortBy];
+        if (filterType === 'high_resource') return p.cpuUsagePercentage > 15 || p.memoryBytes > 300 * 1024 * 1024;
+        if (filterType === 'user') return !p.isCritical && !p.user.includes('SYSTEM');
+        if (filterType === 'system') return p.isCritical || p.user.includes('SYSTEM');
 
-      if (typeof compA === 'string') {
-        compA = compA.toLowerCase();
-        compB = compB.toLowerCase();
-      }
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'cpu') {
+          return sortOrder === 'asc'
+            ? a.cpuUsagePercentage - b.cpuUsagePercentage
+            : b.cpuUsagePercentage - a.cpuUsagePercentage;
+        }
+        if (sortBy === 'memory') {
+          return sortOrder === 'asc'
+            ? a.memoryBytes - b.memoryBytes
+            : b.memoryBytes - a.memoryBytes;
+        }
+        if (sortBy === 'pid') {
+          return sortOrder === 'asc' ? a.pid - b.pid : b.pid - a.pid;
+        }
+        if (sortBy === 'threads') {
+          const threadsA = a.threadsCount || 1;
+          const threadsB = b.threadsCount || 1;
+          return sortOrder === 'asc' ? threadsA - threadsB : threadsB - threadsA;
+        }
 
-      if (compA < compB) return sortOrder === 'asc' ? -1 : 1;
-      if (compA > compB) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+        // Name sorting (string comparison)
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (nameA < nameB) return sortOrder === 'asc' ? -1 : 1;
+        if (nameA > nameB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [processes, searchTerm, filterType, sortBy, sortOrder]);
 
   return (
     <div className="hero-card" style={{ background: 'var(--bg-secondary)' }}>
