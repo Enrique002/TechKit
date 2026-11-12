@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Download, ExternalLink, Shield, Search } from 'lucide-react';
 import { catalogService } from '../../services/catalogService';
 import { urlService } from '../../services/urlService';
@@ -18,18 +18,21 @@ export const ExternalToolsView: React.FC<ExternalToolsViewProps> = ({
 
   const allExternal = catalogService.getExternalTools();
 
-  const filteredTools = allExternal.filter((t) => {
-    if (filterCategory !== 'all' && t.category !== filterCategory) return false;
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        t.name.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.keywords.some((k) => k.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  // Memoize filtered external tools calculation to avoid string filtering overhead on re-renders
+  const filteredTools = useMemo(() => {
+    return allExternal.filter((t) => {
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+      if (searchQuery.trim().length > 0) {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.keywords.some((k) => k.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [allExternal, filterCategory, searchQuery]);
 
   const handleOpenUrl = async (e: React.MouseEvent, url?: string) => {
     e.stopPropagation();
